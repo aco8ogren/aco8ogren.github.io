@@ -44,9 +44,6 @@ Welcome to my website! I am a math-minded mechanical engineer who likes to combi
 
 </div>
 
-
----
-
 ## Publications
 
 ### Peer-Reviewed Articles
