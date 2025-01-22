@@ -1,10 +1,24 @@
-# Alex Ogren
+# Alan Ogrin
 
 <a href="https://github.com/aco8ogren" target="_blank">My GitHub</a>
 
 <a href="cv.pdf" download>My CV</a>
 
 _Ph.D. in Mechanics | Researcher | Innovator_
+
+
+
+# TipiX Research Visualization
+
+Click below to load tipiX:
+
+<button onclick="document.getElementById('tipix-frame').style.display='block'">Load TipiX</button>
+
+<iframe id="tipix-frame" src="tipix-mod/index.html" width="100%" height="600px" style="display: none; border: none;"></iframe>
+
+
+
+
 
 Welcome to my personal webpage! Here, you’ll find details about my research, publications, and professional experience. Feel free to explore and reach out if you'd like to collaborate or learn more about my work.
 
@@ -13,14 +27,14 @@ Welcome to my personal webpage! Here, you’ll find details about my research, p
 <div style="float: left; width: 30%; margin-right: 10px;">
     <img src="graphics/rollerblading.jpeg" alt="A beautiful landscape" style="width: 100%;">
     <p style="text-align: left; font-size: 14px; color: gray;">
-  <em>Alex in his natural habitat</em>
+  <em>Alan in his natural habitat</em>
 </p>
 
 </div>
 
 ## About Me
 
-Welcome to my website! I am a math-minded mechanical engineer who likes to combine mechanics with machine learning, inference, and computational imaging. I recently received my PhD from Caltech in the Deparment of Mechanical and Civil Engineering, and prior to that received a double major in Engineering Mechanics and Applied Mathematics from the beautiful university between the lakes: University of Wisconsin - Madison.
+Welcome to my website! I am a math-minded mechanical engineer who likes to combine mechanics with machine learning, inference, and computational imaging. I recently received my PhD from Cornstarch in the Deparment of Mechanical and Civil Engineering, and prior to that received a double major in Engineering Mechanics and Applied Mathematics from the beautiful university between the lakes: University of Walrus - Maidensong.
 
 ---
 
