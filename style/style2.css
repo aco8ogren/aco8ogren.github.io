@@ -1,0 +1,161 @@
+/* ------------------------------------------------------
+   General Reset & Global Styles
+------------------------------------------------------ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* ------------------------------------------------------
+   Page Background
+   Option A: Subtle Nature Image
+------------------------------------------------------ */
+
+/* 
+  If you have a nature image you’d like to use, place it in
+  your project folder and link it here.
+  Uncomment these lines and comment out the gradient below:
+
+  body {
+    background: url('your-nature-image.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+*/
+
+/* ------------------------------------------------------
+   Page Background
+   Option B: Subtle Green Gradient
+------------------------------------------------------ */
+
+body {
+  /* A calm green gradient background */
+  background: linear-gradient(
+    135deg,
+    #e1f3e1 0%,
+    #d2e8cf 50%,
+    #b5dab0 100%
+  );
+}
+
+/* ------------------------------------------------------
+   Header Styles
+------------------------------------------------------ */
+header {
+  background-color: #2f5933; /* A deep green color */
+  color: #ffffff;
+  padding: 1em;
+  text-align: center;
+  border-bottom: 2px solid #c8dacc;
+}
+
+/* ------------------------------------------------------
+   Side Pane (Fixed Sidebar)
+------------------------------------------------------ */
+.side-pane {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  height: 100vh; 
+  background-color: #f0f7ef; 
+  border-right: 2px solid #c8dacc;
+  padding: 1em;
+  /* If you want a subtle scrollbar, consider overflow: auto; */
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------
+   Navigation in Side Pane
+------------------------------------------------------ */
+.side-pane nav ul {
+  list-style: none;
+}
+
+.side-pane nav ul li {
+  margin: 1em 0;
+}
+
+.side-pane nav ul li a {
+  text-decoration: none;
+  color: #2f5933; 
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  padding: 0.5em 0.8em;
+  display: inline-block;
+  border-radius: 6px;
+}
+
+/* Hover effect for links */
+.side-pane nav ul li a:hover {
+  background-color: #c5dec1;
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------
+   Main Content Area
+------------------------------------------------------ */
+main {
+  margin-left: 220px;
+  padding: 1em;
+  min-height: 100vh; 
+}
+
+/* ------------------------------------------------------
+   Iframe Styling
+------------------------------------------------------ */
+.content-frame {
+  width: 100%;
+  height: 400px; 
+  border: 2px solid #c8dacc;
+  border-radius: 4px;
+  background-color: #fff;
+  margin-bottom: 2em;
+}
+
+/* ------------------------------------------------------
+   Multi-Column Wrapper & Columns
+------------------------------------------------------ */
+.multi-column-wrapper {
+  display: flex;
+  gap: 1em; 
+  /* flex-wrap: wrap; Uncomment to let columns wrap to a new line if space is limited */
+}
+
+.column {
+  flex: 1;
+  background-color: #f8fcf7;
+  padding: 1em;
+  border: 1px solid #c8dacc;
+  border-radius: 4px;
+}
+
+/* ------------------------------------------------------
+   Resizable Column
+------------------------------------------------------ */
+.resizable {
+  resize: horizontal; 
+  overflow: auto; 
+  min-width: 150px;
+  max-width: 400px;
+}
+
+/* ------------------------------------------------------
+   Text Enhancements
+------------------------------------------------------ */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 0.5em;
+  font-family: "Georgia", serif; /* A more elegant font for headings */
+}
+
+p {
+  line-height: 1.5;
+  margin-bottom: 1em;
+}

@@ -10,6 +10,28 @@
  * Author: Adrian V. Dalca, http://www.mit.edu/~adalca/
  */
 
+window.onload = function() {
+    console.log("Auto-loading dataset...");
+
+    // // Simulate clicking the "Load" button
+    // nav('userSets');
+
+    // setTimeout(function() {
+    //     console.log("Loading predefined dataset...");
+
+    //     // Define dataset parameters
+    //     let loadObj = {};
+    //     loadObj.nDims = 2;  // Set to 1 for 1D, 2 for 2D
+    //     loadObj.xBins = 20;  // Set your correct X bins count
+    //     loadObj.yBins = 20;  // Set your correct Y bins count (only for 2D)
+    //     loadObj.fileName = "https://github.com/aco8ogren/tipix-research-demo-assets/releases/download/v1.0.0/f_%d_%d.jpg"; // Update with your dataset URL
+    //     loadObj.type = "web";
+
+    //     // Auto-load dataset
+    //     launchDisplay('userSetWeb');
+
+    // }, 500); // Short delay ensures UI loads before triggering dataset
+};
 
 function loadUserSetAddressBar() {
     loadObj.type = "web";

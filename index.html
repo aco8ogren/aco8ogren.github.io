@@ -1,27 +1,90 @@
 <!DOCTYPE html>
+
+<!-- tipix styles -->
+<!-- <link href="tipix-mod/style/style.css" rel="stylesheet" type="text/css">
+<link href="tipix-mod/style/iframe.css" rel="stylesheet" type="text/css">
+<link href="tipix-mod/style/nav.css" rel="stylesheet" type="text/css"> -->
+
+<!-- tipix scripts -->
+<!-- <script type="text/javascript" src='tipix-mod/ext-js/xio.js'></script>
+<script src="tipix-mod/ext-js/sprintf-0.7-beta1.js" type="text/javascript"></script>
+<script src="tipix-mod/ext-js/sscanf.js" type="text/javascript"></script>
+<script src="tipix-mod/ext-js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="tipix-mod/js/niitools.js"  type="text/javascript"></script>
+<script src="tipix-mod/js/imDisplay.js"  type="text/javascript"></script>
+<script src="tipix-mod/js/nav.js"  type="text/javascript"></script>
+<script src="tipix-mod/js/tools.js"  type="text/javascript"></script>
+<script src="tipix-mod/js/load.js"  type="text/javascript"></script>
+<script src="tipix-mod/js/core.js"  type="text/javascript"></script> -->
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alan Ogrin - Researcher</title>
-    <link rel="stylesheet" href="style.css"> <!-- Link your CSS file here -->
+    <title>Alan Ogrin</title>
+    <link rel="stylesheet" href="style/style.css"> <!-- Link your CSS file here -->
 </head>
-<body>
+
+<body style="max-width: 1000px; margin:auto; background-color:rgb(173, 173, 241,0.3)">
+    <canvas id="bg-canvas"></canvas>
+    <script src="js/core2.js" type="text/javascript"></script>
     <header>
         <h1>Alan Ogrin</h1>
         <nav>
             <a href="https://github.com/username" target="_blank">My GitHub</a> |
             <a href="cv.pdf" download>My CV</a>
         </nav>
-        <p><em>Ph.D. in Mechanics | Researcher | Innovator</em></p>
+        <p><em>Mechanics | Modeling | Machine Learning | Computational Imaging</em></p>
     </header>
+
+    <div style="display: flex; justify-content: center; align-items: center; background:none">
+        <div class="row-container" style="width:55%; border:solid">
+            
+            <!-- First Panel: GIF -->
+            <div class="panel" style="width: 80%; border:solid">
+                <h3>phase-based motion extraction of surface waves</h3>
+                <img src="graphics/vswt-gif.gif" alt="Visualization Example" width="100%">
+            </div>
     
-    <section>
-        <h2>TipiX Research Visualization</h2>
-        <button onclick="document.getElementById('tipix-frame').style.display='block'">Load TipiX</button>
-        <iframe id="tipix-frame" src="tipix-mod/index.html" width="100%" height="600px" style="display: none; border: none;"></iframe>
-    </section>
-    
+            <!-- Second Panel: FFT Image -->
+            <div class="panel" style="width: 20%; border:solid">
+                <h3>observed dispersion relation</h3>
+                <img src="graphics/fft_observed.png" width="100%">
+            </div>
+        </div>    
+    </div>
+
+    <!-- <div style="display: flex; justify-content: center; align-items: center;">
+        <div class="panel" style="width: 20%; position: relative">
+            <h3>Parameter fitting - interactive demo</h3>
+            <iframe id="tipix-frame" style="position: relative"
+            src="tipix-mod/index.html"
+            style="width: 100%; height: 900px"></iframe>
+        </div>
+    </div> -->
+
+    <!-- <div id="main-container">
+        <div id="display-container">
+          <canvas id="mainDisplay" width="100%" height="100%"></canvas>
+        </div>
+        <div id="xlabel"><span id="xlabelspan">xlabel</span></div>
+        <div id="ylabel"><span id="ylabelspan">ylabel</span></div>
+    </div> -->
+
+    <a class="colorful-link-button" href="tipix-mod/index.html"
+        target="_blank"
+    >
+        Open Tipix-Mod
+    </a>
+
+    <!-- <div style="max-width: 800px; margin: 0 auto;">
+        <iframe 
+          id="tipix-frame" 
+          src="tipix-mod/index.html" 
+          style="width: 100%; height: 500px; border: none;"
+        ></iframe>
+      </div>       -->
+
     <section>
         <p>Welcome to my personal webpage! Here, you’ll find details about my research, publications, and professional experience. Feel free to explore and reach out if you'd like to collaborate or learn more about my work.</p>
     </section>

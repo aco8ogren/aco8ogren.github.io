@@ -27,7 +27,7 @@ See LICENSE file for more information
 </head>
 <body onload="reshapeCanvas();" onResize="reshapeCanvas();">
 <div id="nav-container">
-  <h1>tipiX - large dataset visualization</h1>
+  <h1><em>Visual Surface Wave Tomography</em> - tipiX interactive demo</h1>
   <a id="examples-tab-title" onClick="nav('examples')" href="#"> Examples </a> <a id="userSets-tab-title" onClick="nav('userSets')" href="#"> Load </a> <a id="about-tab-title"  onClick="nav('about')" href="#"> About </a> </div>
 
 <div id="menu-container">
@@ -35,7 +35,7 @@ See LICENSE file for more information
     <div id="about-tab" class="tab" >
       <div class="close_button"><a href="#" onClick="nav('about')">x</a></div>
       <h2> About tipiX </h2>
-      tipiX is a tool for very quickly exploring different dimentions of image sets, for example the time-of-day vs seasons in landscape pictures from similar view points, or a medical dataset. It's also useful in visualizing simple datasets like timelapses. Try an <a href="#" onClick="nav('examples')">example</a> dataset or <a href="#" onClick="nav('userSets')">load your own</a> dataset. <br />
+      tipiX is a tool for very quickly exploring different dimensions of image sets, for example the time-of-day vs seasons in landscape pictures from similar view points, or a medical dataset. It's also useful in visualizing simple datasets like timelapses. Try an <a href="#" onClick="nav('examples')">example</a> dataset or <a href="#" onClick="nav('userSets')">load your own</a> dataset. <br />
       Once loaded, movement with the mouse along x or y can explore different dimensions of the data. tipiX is written and maintained by <a href="http://adalca.mit.edu">Adrian Dalca</a>, and is open-sourced on <a href="https://github.com/adalca/tipiX">github</a>. <br />
       <br />
       <div style="width:300px; display:inline-block;">
@@ -96,14 +96,14 @@ See LICENSE file for more information
           <br />
           <form style="text-align:left;" id="userSet">
             Number of dimensions to explore: 1D
-            <input type="radio" name="nDims" value="1"  id="nDims1" checked>
+            <input type="radio" name="nDims" value="1"  id="nDims1">
             2D
-            <input type="radio" name="nDims" value="2" id="nDims2">
+            <input type="radio" name="nDims" value="2" id="nDims2" checked>
             <br />
             <span id="yBins" style="display:inline"> yBins:
-            <input name="yBins" type="text" value="1" size="4" maxlength="4" >
+            <input name="yBins" type="text" value="20" size="4" maxlength="4" >
             &nbsp; &nbsp; &nbsp; </span> xBins:
-            <input name="xBins" type="text" value="30" size="4" maxlength="4">
+            <input name="xBins" type="text" value="20" size="4" maxlength="4">
             <br />
             filename:
             <input name="filename" type="text" value="https://github.com/aco8ogren/tipix-research-demo-assets/releases/download/v1.0.0/f_%d_%d.jpg" size="100">
@@ -124,7 +124,7 @@ See LICENSE file for more information
 
 <div id="main-container">
   <div id="display-container">
-    <canvas id="mainDisplay" width="1200" height="900"></canvas>
+    <canvas id="mainDisplay" width="100%" height="100%"></canvas>
   </div>
   <div id="xlabel"><span id="xlabelspan">xlabel</span></div>
   <div id="ylabel"><span id="ylabelspan">ylabel</span></div>

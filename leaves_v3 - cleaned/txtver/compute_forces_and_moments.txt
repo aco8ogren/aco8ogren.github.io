@@ -1,0 +1,61 @@
+function [F,M] = compute_forces_and_moments(leaf,v_air,rho_air)
+% constants
+Cd_perp = leaf.Cd_perpendicular; % 2.0, 1.0
+Cd_par = leaf.Cd_parallel; % 0.3, 0.05
+Cn_max  = leaf.Cn_max; % 0.5, 1.1
+g = 9.81;
+aCoP = leaf.aCoP; % 0.25, CoP shift as fraction of R
+
+% relative flow
+v_rel = leaf.v - v_air;
+
+V = norm(v_rel);
+if V < 1e-12
+    v_hat = [0 0 0];
+else
+    v_hat = v_rel / V;
+end
+
+% orientation
+q = leaf.q;
+% n = quat_rotate([0 0 1], q); % current leaf normal
+n = leaf.normal; % current leaf normal
+
+% angle between flow & leaf normal
+cosTh = dot(n, v_hat);
+Cd = Cd_par + (Cd_perp - Cd_par)*cosTh^2;
+
+% drag force
+A = pi*leaf.R^2;
+F_drag = -0.5*rho_air*A*Cd*V^2 * v_hat; % 3-D, opposite flow
+
+% normal force (lift)
+sinTh = norm(cross(n, v_hat)); assert(0<=sinTh); assert(sinTh<=1);
+Cn = Cn_max * sin(2*atan2(sinTh,cosTh)); % = Cn_max*sin 2θ
+F_normal = -0.5*rho_air*A*Cn*V^2 * sign(cosTh) * n;
+
+% sum aerodynamic forces
+F_aero  = F_drag + F_normal;
+
+% center-of-pressure shift
+v_parallel_local = quat_rotate(v_hat, quat_conj(q)); % project into leaf frame
+v_parallel_local(3) = 0; % drop normal component
+if norm(v_parallel_local) > 1e-8
+    v_parallel_local = v_parallel_local / norm(v_parallel_local);
+else
+    v_parallel_local = [0 0 0];
+end
+r_CoP_local = -aCoP * leaf.R * v_parallel_local; % upstream shift
+r_CoP_world = quat_rotate(r_CoP_local, q); % local to world coords
+
+% aerodynamic moment due to center-of-pressure shift (assume uniform
+% far-field air velocity)
+M_aero = cross(r_CoP_world, F_aero);
+
+% gravity
+F_grav = [0 -leaf.mass*g 0];
+
+% resultant
+F = F_grav + F_aero;
+M = M_aero;
+end

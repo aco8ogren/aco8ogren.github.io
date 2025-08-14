@@ -498,6 +498,9 @@ function getDiscretePosition(pos, canvasLen, nDiscretes) {
 
     // normalize the position to be between (1/canvasLen)/2 and 1
     normPos = Math.max(pos / canvasLen, (1 / canvasLen) / 2);
+    // leftMargin = 30;
+    // rightMargin = 30;
+    // normPos = Math.max((pos - leftMargin) / (canvasLen - leftMargin - rightMargin), (1 / canvasLen) / 2);
     debugMsg = sprintf('%d, %2.2f, %2.2f, %d.',
             Math.ceil(normPos * nDiscretes) - 1, normPos * nDiscretes, pos, nDiscretes);
     writeDebug(debugMsg);

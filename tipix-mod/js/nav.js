@@ -49,8 +49,16 @@ $(document).ready(function(){
 
 
 
-    // form hide yBins by default
-    $('#yBins').hide();
+    // // form hide yBins by default
+    // $('#yBins').hide();
+
+    // Only hide or show yBins based on which radio is checked.
+    if ($('#nDims2').prop('checked')) {
+        $('#yBins').show();
+    } else {
+        $('#yBins').hide();
+    }
+
     $('#userSet').change(function() {
         if ($('#nDims2').prop('checked')) {
             $('#yBins').show();

@@ -1,0 +1,45 @@
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* Make canvas cover the entire window */
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* behind your main content */
+  }
+
+.colorful-link-button:hover {
+    background-color: rgb(255,255,255);
+    color: rgb(100,100,100);
+}
+
+.colorful-link-button {
+    padding: 2px;
+}
+
+.gif-container img {
+    height: auto; /* Keeps aspect ratio */
+    max-width: 100%; /* Ensures it doesn't overflow */
+}
+
+.row-container {
+    display: flex;
+    width: 100%;
+    height: auto;
+    gap: 10px; /* Adds space between elements */
+    padding: 0;
+}
+
+.flex-item {
+    flex-grow: 0; /* Keeps items from stretching unpredictably */
+    flex-shrink: 0; /* Prevents shrinking */
+    height: 100%; /* Makes sure the div itself fills the row height */
+}
+
+/* Ensure iframe stretches fully inside its container */
+.flex-item iframe {
+    width: 100%;
+    height: 100%;
+    border: none; /* Optional: Removes default iframe border */
+}
+
