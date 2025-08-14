@@ -1,5 +1,6 @@
 // js/leaf_sim/leaf_sim.js
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
 import { compute_forces_and_moments } from './forces.js';
 import { newtons } from './integrator.js';
 import { attach_view } from './viewport.js';
@@ -14,7 +15,8 @@ const debug_params = {
     is_draw_leaves_together: true,
 };
 
-const space = { L: [120, 80, 20] };
+const space = { L: [120, 80, 80] };
+// const space = { L: [400, 200, 40] };
 const [Lx, Ly, Lz] = space.L;
 
 const sim_params = {
@@ -36,9 +38,15 @@ const leaf_params = {
     fade_out_speed: 0.02,
 };
 
+// --- camera params
+const cam_params = {
+    projection: 'perspective', // 'orthographic', 'perspective'
+    view: 'global'
+}
+
 // --- leaf lifecycle (spawn/despawn) ---
 const leaf_lifecycle = {
-    target_count: sim_params.n_leaves*2, // aim to keep about this many leaves alive
+    target_count: sim_params.n_leaves * 2, // aim to keep about this many leaves alive
     lambda_base: 10,        // base spawn rate [leaves/sec] when there are 0 leaves
     out_padding: 5,        // [m] extra boundary beyond [0..L] that triggers fade-out
 };
@@ -69,8 +77,8 @@ const swirl_params = {
 const quiver_params = {
     nx: 30,                // grid columns
     ny: 24,                // grid rows
-    nz: 1,                 // grid slices in z (set >1 in the future for 3D quiver)
-    z_slice: 0,            // z-plane for nz=1
+    nz: 3,                 // grid slices in z (set >1 in the future for 3D quiver)
+    z_slice: space.L[2]/2,            // z-plane for nz=1
     scale: 0.1,            // meters per (m/s) displayed
     max_len: 6,            // clamp displayed arrow length (m)
     shaft_radius: 0.05,    // visual thickness
@@ -123,19 +131,76 @@ renderer.domElement.style.position = 'absolute';
 renderer.domElement.style.inset = '0';
 view_container.appendChild(renderer.domElement);
 
+function make_camera(mode) {
+    // arguments don't matter - defaults get overwritten by attach_view anyway
+    if (mode === 'perspective') {
+        const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 5000); // fov=40° default
+        return cam;
+    } else {
+        const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 10000);
+        return cam;
+    }
+}
+
 const scene = new THREE.Scene();
-const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+let cam = make_camera(cam_params.projection)
 scene.add(cam);
 
 cam.position.set(Lx / 2, Ly / 2, -10);
 cam.lookAt(Lx / 2, Ly / 2, 0);
 cam.updateProjectionMatrix();
 
-const view = attach_view(renderer, cam, view_container, { space, mode: 'global' });
+const view = attach_view(renderer, cam, view_container, { space, mode: cam_params.view });
+
+// ... after scene & cam are created and added
+const controls = new OrbitControls(cam, renderer.domElement);
+
+// rotate around scene center
+controls.target.set(Lx/2, Ly/2, 0);
+
+// only MMB rotates; disable zoom/pan
+controls.enableZoom = true;
+controls.enablePan  = true;
+controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
+
+// keep camera pose user-driven (see viewport.js guard below)
+cam.userData.lockPose = true;
+
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'g') { view.set_mode('global'); console.log('mode → global'); }
-    if (e.key === 'i') { view.set_mode('immersive'); console.log('mode → immersive'); }
+    if (e.key === 'g') {
+        view.set_mode('global');
+        return;
+    }
+    if (e.key === 'i') {
+        view.set_mode('immersive');
+        return;
+    }
+
+    // Projection hotkeys (idempotent)
+    if (e.key === 'o') { // force ORTHOGRAPHIC
+        if (!cam.isOrthographicCamera) {
+            scene.remove(cam);
+            cam = make_camera('orthographic');
+            scene.add(cam);
+            view.swap_camera(cam, 'orthographic'); // if your swap_camera only takes (cam), extra arg is ignored
+            console.log('projection → orthographic');
+        }
+        return;
+    }
+
+    if (e.key === 'p') { // force PERSPECTIVE
+        if (!cam.isPerspectiveCamera) {
+            scene.remove(cam);
+            cam = make_camera('perspective');
+            scene.add(cam);
+            view.swap_camera(cam, 'perspective');  // ok if swap_camera(cam) in your build
+            console.log('projection → perspective');
+        }
+        return;
+    }
 });
+
+
 
 function add_domain_box() {
     const geom = new THREE.EdgesGeometry(new THREE.BoxGeometry(Lx, Ly, Lz));
@@ -146,13 +211,40 @@ function add_domain_box() {
     return wire;
 }
 
-function hud_fit_line() {
+function hud_camera_info() {
     const rect = renderer.domElement.getBoundingClientRect();
     const w = rect.width, h = rect.height;
-    const fw = cam.right - cam.left, fh = cam.top - cam.bottom;
-    const pxmx = (w / fw).toFixed(2), pxmy = (h / fh).toFixed(2);
-    return `canvas=${w | 0}×${h | 0}px  frustum=${fw.toFixed(2)}×${fh.toFixed(2)}m  px/m=(${pxmx}, ${pxmy})`;
+    const proj = cam.isOrthographicCamera ? 'orthographic' : 'perspective';
+    const mode = view.get_mode(); // 'global' | 'immersive'
+
+    let first_two_lines = '';
+
+    if (cam.isOrthographicCamera) {
+        const fw = cam.right - cam.left;
+        const fh = cam.top - cam.bottom;
+        const pxmx = (w / fw).toFixed(2);
+        const pxmy = (h / fh).toFixed(2);
+        first_two_lines = `projection=${proj}  mode=${mode}\ncanvas=${w | 0}×${h | 0}px  frustum=${fw.toFixed(2)}×${fh.toFixed(2)}m  px/m=(${pxmx}, ${pxmy})`;
+    } else if (cam.isPerspectiveCamera) {
+        // perspective: report px/m at z=0 (the look-at plane)
+        const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
+        const d = Math.abs(cam.position.z); // we position camera to look at z=0
+        const visibleH = 2 * d * tan;
+        const visibleW = visibleH * (w / h);
+        const pxmx = (w / visibleW).toFixed(2);
+        const pxmy = (h / visibleH).toFixed(2);
+        first_two_lines = `projection=${proj}  mode=${mode}\ncanvas=${w | 0}×${h | 0}px  vis@z=0=${visibleW.toFixed(2)}×${visibleH.toFixed(2)}m  px/m@z=0=(${pxmx}, ${pxmy})`;
+    }
+
+    // Camera position and direction
+    const posStr = `[${cam.position.x.toFixed(2)}, ${cam.position.y.toFixed(2)}, ${cam.position.z.toFixed(2)}]`;
+    const dir = new THREE.Vector3();
+    cam.getWorldDirection(dir); // unit vector the camera is facing
+    const dirStr = `[${dir.x.toFixed(3)}, ${dir.y.toFixed(3)}, ${dir.z.toFixed(3)}]`;
+
+    return `${first_two_lines}\ncam position = ${posStr}   cam dir = ${dirStr}`;
 }
+
 
 function make_quiver_instanced() {
     const { nx, ny, nz, shaft_radius, head_radius, color } = quiver_params;
@@ -171,9 +263,13 @@ function make_quiver_instanced() {
     shaft.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     head.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
-    // Slightly raise render order so it sits above wireframe box
-    shaft.renderOrder = 10;
-    head.renderOrder = 11;
+    // prevent the whole batch from being culled when the origin is off‑screen
+    shaft.frustumCulled = false;
+    head.frustumCulled  = false;
+
+    // // Slightly raise render order so it sits above wireframe box
+    // shaft.renderOrder = 10;
+    // head.renderOrder = 11;
 
     scene.add(shaft);
     scene.add(head);
@@ -365,7 +461,7 @@ function spawn_leaf() {
     const { L } = space;
 
     // Position & velocity
-    const x = new THREE.Vector3(Math.random() * L[0], Math.random() * L[1], 0.8 * L[2] + 0.2 * Math.random() * L[2]);
+    const x = new THREE.Vector3(Math.random() * L[0], Math.random() * L[1], 0.2 * L[2] + 0.8 * Math.random() * L[2]);
     const v = new THREE.Vector3(0, 0, 0);
 
     // Orientation: rotate ẑ → random direction (MATLAB vec_to_quat equivalent)
@@ -541,16 +637,21 @@ function update_hud(substep_stats = null) {
         : '';
 
     hud.textContent =
-        hud_fit_line() + '\n' +
+        hud_camera_info() + '\n\n' +
+        
         substeps_line +
-        `t = ${S.t.toFixed(3)} s\n` +
+        `t = ${S.t.toFixed(3)} s\n\n` +
+        
+        '--- leaf 1 ---\n' +
+
         `x0 = [${L0.x.x.toFixed(2)}, ${L0.x.y.toFixed(2)}, ${L0.x.z.toFixed(2)}]\n` +
         `v0 = [${L0.v.x.toFixed(2)}, ${L0.v.y.toFixed(2)}, ${L0.v.z.toFixed(2)}]\n` +
         `alpha0 = ${L0.alpha.toFixed(2)}\n` +
         `q0 = [${L0.q.w.toFixed(3)}, ${L0.q.x.toFixed(3)}, ${L0.q.y.toFixed(3)}, ${L0.q.z.toFixed(3)}]\n` +
         `|v0| = ${L0.v.length().toFixed(2)} m/s\n` +
         `|ω0| = ${L0.omega.length().toFixed(2)} rad/s\n\n` +
-        `swirls = ${S.swirls.length} / ${nSwirlMax}\n` + 
+
+        `swirls = ${S.swirls.length} / ${nSwirlMax}\n` +
         `leaves = ${S.leaves.length} / ${leaf_lifecycle.target_count}\n`;
 }
 
@@ -577,6 +678,7 @@ function loop(now_ms) {
 
     update_hud({ inst: steps_this_frame, avg, min, max });
 
+    controls.update();
     renderer.render(scene, cam);
     requestAnimationFrame(loop);
 }
