@@ -8,6 +8,9 @@ import { Swirl, spawn_swirl } from './swirl.js';
 
 console.log('leaf_sim + three.js booting');
 
+/* flags */
+const isUseOrbitControls = false;
+
 /* -------------------- TUNABLE PARAMS -------------------- */
 const debug_params = {
     is_draw_swirl: false,
@@ -15,7 +18,7 @@ const debug_params = {
     is_draw_leaves_together: true,
 };
 
-const space = { L: [120, 80, 80] };
+const space = { L: [60, 500, 80] };
 // const space = { L: [400, 200, 40] };
 const [Lx, Ly, Lz] = space.L;
 
@@ -23,7 +26,7 @@ const sim_params = {
     dt: 1 / 120,
     rho_air: 1.2,
     g: 9.81,
-    n_leaves: 40,
+    n_leaves: 120,
 };
 
 const leaf_params = {
@@ -41,7 +44,7 @@ const leaf_params = {
 // --- camera params
 const cam_params = {
     projection: 'perspective', // 'orthographic', 'perspective'
-    view: 'global'
+    view: 'immersive' // 'global', 'immersive'
 }
 
 // --- leaf lifecycle (spawn/despawn) ---
@@ -75,16 +78,17 @@ const swirl_params = {
 
 // --- quiver (air-velocity debug overlay) ---
 const quiver_params = {
-    nx: 30,                // grid columns
-    ny: 24,                // grid rows
-    nz: 3,                 // grid slices in z (set >1 in the future for 3D quiver)
-    z_slice: space.L[2]/2,            // z-plane for nz=1
-    scale: 0.1,            // meters per (m/s) displayed
+    nx: 60,                // grid columns
+    ny: 512,                // grid rows
+    nz: 1,                 // grid slices in z (set >1 in the future for 3D quiver)
+    z_slice: space.L[2] / 2,            // z-plane for nz=1
+    scale: 0.05,            // meters per (m/s) displayed
     max_len: 6,            // clamp displayed arrow length (m)
     shaft_radius: 0.05,    // visual thickness
     head_radius: 0.2,    // cone radius (visual)
     head_ratio: 0.25,    // head length as fraction of total arrow length
     color: 0x6ad1ff,
+    alpha: 0.4,
 };
 
 let quiver_inst = null;    // { shaft: InstancedMesh, head: InstancedMesh, count }
@@ -104,7 +108,7 @@ hud.style.margin = '0';
 hud.style.padding = '8px 10px';
 hud.style.background = 'rgba(0,0,128,0.6)';
 hud.style.color = '#cde';
-hud.style.font = '12px/1.3 monospace';
+hud.style.font = '1px/1.3 monospace';
 hud.style.borderRadius = '8px';
 hud.style.pointerEvents = 'none';
 hud.style.zIndex = '10';
@@ -152,16 +156,87 @@ cam.updateProjectionMatrix();
 
 const view = attach_view(renderer, cam, view_container, { space, mode: cam_params.view });
 
-// ... after scene & cam are created and added
-const controls = new OrbitControls(cam, renderer.domElement);
+/* -------------------- SCROLL → CAMERA (immersive only) -------------------- */
+/**
+ * Map page scroll (0..scrollRange px) → camera travel in scene units.
+ * Tweak TRAVEL_Y to taste (how far camera moves for a full-page scroll).
+ */
 
-// rotate around scene center
-controls.target.set(Lx/2, Ly/2, 0);
 
-// only MMB rotates; disable zoom/pan
-controls.enableZoom = true;
-controls.enablePan  = true;
-controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
+// Use the overlay panel as the scroll source
+const SCROLL_SRC = document.getElementById('text-overlay-element')
+console.log(SCROLL_SRC.tagName)
+
+const SCROLL = {
+    baseCamY: cam.position.y,                     // starting Y (usually Ly/2)
+    travelY: 0.2 * Ly,                            // how many meters to move for full page scroll
+    scrollRange: 1,                               // pixels of scrollable height (computed)
+};
+
+// Call this whenever canvas size or camera FOV/pose changes.
+function computeMetersPerCssPx(camera, renderer, z_text_meters_camspace) {
+  const H_css_px = renderer.domElement.clientHeight; // CSS pixels
+  if (camera.isPerspectiveCamera) {
+    const fovy = camera.fov * Math.PI / 180; // radians
+    return (2 * z_text_meters_camspace * Math.tan(fovy / 2)) / H_css_px;
+  } else if (camera.isOrthographicCamera) {
+    const top = camera.top; // world meters
+    return (2 * top) / H_css_px;
+  } else {
+    return 0;
+  }
+}
+
+function computeScrollRange() {
+    SCROLL.scrollRange = Math.max(
+        1,
+        SCROLL_SRC.scrollHeight - SCROLL_SRC.clientHeight
+    );
+}
+
+function getScrollFrac(el) {
+  const range = Math.max(1, el.scrollHeight - el.clientHeight);
+  return Math.min(1, Math.max(0, el.scrollTop / range));
+}
+
+function updateCamFromScroll() {
+  if (view.get_mode && view.get_mode() !== 'immersive') return;
+
+  const frac = getScrollFrac(SCROLL_SRC);
+  cam.position.y = SCROLL.baseCamY - frac * SCROLL.travelY; // or minus if you prefer
+  cam.lookAt(Lx/2, cam.position.y, 0);
+}
+
+// Init + listeners
+computeScrollRange();
+updateCamFromScroll();
+
+SCROLL_SRC.addEventListener('scroll', updateCamFromScroll, { passive: true });
+window.addEventListener('resize', updateCamFromScroll);
+updateCamFromScroll(); // initial sync
+
+SCROLL_SRC.addEventListener('scroll', () => console.log('SCROLL_SRC scrollTop=', SCROLL_SRC.scrollTop));
+
+// window.addEventListener('scroll', () => console.log('window scroll fired'));
+// document.addEventListener('scroll', (e) => {
+//   if (e.target !== document) console.log('element scroll fired:', e.target);
+// }, true); // capture so you see element-level scrolls
+
+// console.log('controls:', { enableZoom: controls.enableZoom, enablePan: controls.enablePan });
+
+
+if (isUseOrbitControls) {
+    // ... after scene & cam are created and added
+    const controls = new OrbitControls(cam, renderer.domElement);
+
+    // rotate around scene center
+    controls.target.set(Lx / 2, Ly / 2, 0);
+
+    // only MMB rotates; disable zoom/pan
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
+}
 
 // keep camera pose user-driven (see viewport.js guard below)
 cam.userData.lockPose = true;
@@ -169,10 +244,12 @@ cam.userData.lockPose = true;
 window.addEventListener('keydown', (e) => {
     if (e.key === 'g') {
         view.set_mode('global');
+        updateCamFromScroll(); // keep camera coherent on mode change
         return;
     }
     if (e.key === 'i') {
         view.set_mode('immersive');
+        updateCamFromScroll(); // keep camera coherent on mode change
         return;
     }
 
@@ -245,7 +322,6 @@ function hud_camera_info() {
     return `${first_two_lines}\ncam position = ${posStr}   cam dir = ${dirStr}`;
 }
 
-
 function make_quiver_instanced() {
     const { nx, ny, nz, shaft_radius, head_radius, color } = quiver_params;
     const count = nx * ny * nz;
@@ -255,7 +331,7 @@ function make_quiver_instanced() {
     const headGeom = new THREE.ConeGeometry(head_radius, 1, 12, 1, true);
 
     // Materials
-    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95 });
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: quiver_params.alpha });
 
     // Instanced meshes
     const shaft = new THREE.InstancedMesh(shaftGeom, mat, count);
@@ -265,7 +341,7 @@ function make_quiver_instanced() {
 
     // prevent the whole batch from being culled when the origin is off‑screen
     shaft.frustumCulled = false;
-    head.frustumCulled  = false;
+    head.frustumCulled = false;
 
     // // Slightly raise render order so it sits above wireframe box
     // shaft.renderOrder = 10;
@@ -638,10 +714,10 @@ function update_hud(substep_stats = null) {
 
     hud.textContent =
         hud_camera_info() + '\n\n' +
-        
+
         substeps_line +
         `t = ${S.t.toFixed(3)} s\n\n` +
-        
+
         '--- leaf 1 ---\n' +
 
         `x0 = [${L0.x.x.toFixed(2)}, ${L0.x.y.toFixed(2)}, ${L0.x.z.toFixed(2)}]\n` +
@@ -678,7 +754,9 @@ function loop(now_ms) {
 
     update_hud({ inst: steps_this_frame, avg, min, max });
 
-    controls.update();
+    if (isUseOrbitControls) {
+        controls.update();
+    }
     renderer.render(scene, cam);
     requestAnimationFrame(loop);
 }

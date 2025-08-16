@@ -1,14 +1,140 @@
 <!doctype html>
-<html>
+<html lang="en">
+<!-- Import map: same as your current file -->
 <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+      }
     }
-  }</script>
+  </script>
 
-<body>
-  <script type="module" src="./js/leaf_sim/leaf_sim.js"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* Page background & basic text styles (behind everything) */
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: #10131a;
+      color: #eaeff7;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow-y: auto;
+    }
+
+    /* This matches your JS scene container being fixed with z-index: 0.
+         We don't declare it here; leaf_sim.js creates it and sets zIndex='0'. */
+
+    /* Scrollable copy that must appear *above* the scene.
+         IMPORTANT: position + z-index > 0 puts it in front of the fixed scene. */
+    .copy {
+      position: relative;
+      /* enables z-index to take effect */
+      z-index: 5;
+      /* > 0 (scene), < 10 (your HUD), adjust if needed */
+      max-width: 60ch;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      background: transparent;
+      /* keep it on top without tint */
+    }
+
+    /* Spacer blocks to create vertical height so the page scrolls */
+    .spacer {
+      position: relative;
+      /* keep the same stacking context as .copy */
+      z-index: 5;
+      /* ensure they’re also above the scene */
+      height: 45vh;
+    }
+
+    /* Optional: a full-viewport section to mark where the scene lives visually */
+    .scene-slot {
+      position: relative;
+      z-index: 1;
+      /* below .copy/.spacer but above page background (not necessary, just semantic) */
+      height: 85vh;
+      /* matches your JS container height-ish so layout feels consistent */
+    }
+  </style>
+</head>
+
+<!-- Load the simulation: it creates a fixed container at z-index: 0 (opaque). -->
+<script type="module" src="./js/leaf_sim/leaf_sim.js"></script>
+
+<body id="text-overlay-element">
+  <!-- Scrollable text ABOVE the scene (z-index: 5) -->
+  <header class="copy">
+    <h1>falling leaves</h1>
+    <p>
+      Here are some words you might want to read. It's also possible you don't want to. But by this point you've already read them.
+    </p>
+  </header>
+
+  <div class="spacer"></div>
+
+  <!-- Put this where you want the repeated blocks to appear -->
+  <section id="copies-target"></section>
+
+  <!-- Define the block once inside a <template> (it won't render by itself) -->
+  <template id="copy-block">
+    <section class="copy">
+      <h2>Section {{i}}</h2>
+      <p>
+        Here are some words you might want to read. It's also possible you don't want to. But by this point you've already read them.
+        <div class="spacer"></div>
+      </p>
+    </section>
+  </template>
+
+  <!-- Put this where you want the repeated blocks to appear -->
+  <section id="copies-target"></section>
+
+  <!-- Define the block once inside a <template> (it won't render by itself) -->
+  <template id="copy-block">
+    <section class="copy">
+      <h2>Section {{i}}</h2>
+      <p>
+        This is a repeated block. You can put any markup here—paragraphs,
+        images, buttons, whatever. The {{i}} will be replaced with the index.
+      </p>
+    </section>
+  </template>
+
+  <!-- Tiny helper to stamp the template N times -->
+  <script>
+    // repeat a <template id="..."> N times into a container
+    function repeatTemplate(tplSelector, n, targetSelector, vars = {}) {
+      const tpl = document.querySelector(tplSelector);
+      const target = document.querySelector(targetSelector);
+      if (!tpl || !target) return;
+
+      const frag = document.createDocumentFragment();
+      for (let i = 1; i <= n; i++) {
+        // clone the template contents
+        const node = tpl.content.cloneNode(true);
+
+        // simple {{var}} replacement in text nodes
+        const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+        let t;
+        while ((t = walk.nextNode())) {
+          t.nodeValue = t.nodeValue
+            .replaceAll('{{i}}', String(i))
+            // optional: provide your own variables via 'vars'
+            .replaceAll('{{N}}', String(n));
+        }
+
+        frag.appendChild(node);
+      }
+      target.appendChild(frag);
+    }
+
+    // Example: make 8 copies
+    repeatTemplate('#copy-block', 8, '#copies-target');
+  </script>
 </body>
 
 </html>
