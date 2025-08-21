@@ -1,10 +1,17 @@
-// js/leaf_sim/integrator.js
-import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
-/**
+// js/leaf_sim/integrator.js
+
+/*
  * Symplectic Euler integration (MATLAB newtons.m port).
  * All state vectors/quaternions are THREE types.
+ * @Author: alex 
+ * @Date: 2025-08-18 14:17:58 
+ * @Last Modified by: alex
+ * @Last Modified time: 2025-08-18 15:33:32
  */
+
+import * as THREE from 'three';
+
 export function newtons(leaf, F, M, dt) {
   // ---- Linear dynamics ----
   const a = F.clone().multiplyScalar(1 / leaf.mass);

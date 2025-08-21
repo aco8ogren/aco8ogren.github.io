@@ -1,9 +1,13 @@
-// js/leaf_sim/forces.js
-import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
-/**
+// js/leaf_sim/forces.js
+
+/*
+ * @Author: alex 
+ * @Date: 2025-08-18 14:17:52 
+ * @Last Modified by: alex
+ * @Last Modified time: 2025-08-19 14:21:14
+ * 
  * MATLAB port of compute_forces_and_moments (Vector3/Quaternion version).
- * Contract (no sloppy fallbacks):
  *  - leaf.v        : THREE.Vector3   (world)
  *  - leaf.normal   : THREE.Vector3   (world, unit; ALWAYS present & kept in sync elsewhere)
  *  - leaf.q        : THREE.Quaternion (x,y,z,w) unit; orientation world←local
@@ -12,73 +16,86 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
  *  - rho_air       : number
  * Returns: { F: THREE.Vector3, M: THREE.Vector3 }
  */
-export function compute_forces_and_moments(leaf, v_air, rho_air) {
-  // --- hard preconditions (fail fast) ---
-  if (!(leaf.v instanceof THREE.Vector3)) throw new Error('leaf.v must be THREE.Vector3');
-  if (!(leaf.normal instanceof THREE.Vector3)) throw new Error('leaf.normal must be THREE.Vector3');
-  if (!(leaf.q instanceof THREE.Quaternion)) throw new Error('leaf.q must be THREE.Quaternion');
 
-  const g = 9.81;
+import * as THREE from 'three';
 
-  // relative flow
-  const v_rel = leaf.v.clone().sub(v_air);
-  const V = v_rel.length();
+// --- module-scoped temporaries to avoid per-call allocations ---
+const _v_rel   = new THREE.Vector3();
+const _v_hat   = new THREE.Vector3();
+const _r_local = new THREE.Vector3();
+const _r_world = new THREE.Vector3();
+const _Faero   = new THREE.Vector3();
+const _Mtmp    = new THREE.Vector3();
+const _q_conj  = new THREE.Quaternion();
 
-  // If no meaningful aero, gravity only; moment zero (matches MATLAB’s effect since V^2 scales aero) 
-  if (V < 1e-12 || !Number.isFinite(V)) {
-    return {
-      F: new THREE.Vector3(0, -leaf.mass * g, 0),
-      M: new THREE.Vector3(0, 0, 0),
-    };
+// true constants
+const g = 9.81;
+
+//
+export function compute_forces_and_moments(leaf, v_air, rho_air, outF, outM) {
+  // // Preconditions (kept for safety)
+  // if (!(leaf.v instanceof THREE.Vector3)) throw new Error('leaf.v must be THREE.Vector3');
+  // if (!(leaf.normal instanceof THREE.Vector3)) throw new Error('leaf.normal must be THREE.Vector3');
+  // if (!(leaf.q instanceof THREE.Quaternion)) throw new Error('leaf.q must be THREE.Quaternion');
+
+  // _v_rel, V^2, 1 / V, and V
+  _v_rel.copy(leaf.v).sub(v_air);
+  const V2 = _v_rel.lengthSq();
+  if (!Number.isFinite(V2) || V2 <= 1e-24) {
+    // gravity only (allocate outputs once here)
+    outF.set(0, - leaf.mass * g, 0)
+    outM.set(0,0,0)
+    return
   }
+  const V    = Math.sqrt(V2);
+  const invV = 1 / V;
 
-  const v_hat = v_rel.clone().multiplyScalar(1 / V);
+  // unit flow direction
+  _v_hat.copy(_v_rel).multiplyScalar(invV);
 
-  // orientation / normal (MATLAB uses n = leaf.normal) 
-  const n = leaf.normal; // MUST be unit and synced with q by the integrator
+  // normal & angle components (no acos/atan2)
+  const n = leaf.normal; // unit, kept in sync elsewhere
+  // let cosTh = _v_hat.dot(n);
+  // // numerical safety
+  // cosTh = Math.max(-1, Math.min(1, cosTh));
+  const cosTh = THREE.MathUtils.clamp(_v_hat.dot(n), -1, 1);
+  const sinTh = THREE.MathUtils.clamp(Math.sqrt(1 - cosTh * cosTh), 0, 1);
+  const signCos = Math.sign(cosTh);
 
-  // angle between flow & leaf normal
-  const cosTh = THREE.MathUtils.clamp(n.dot(v_hat), -1, 1);
-  const sinTh = n.clone().cross(v_hat).length();
-
-  // coefficients (Cd, Cn) – identical formulas to MATLAB 
+  // Coefficients
   const Cd = leaf.Cd_parallel +
             (leaf.Cd_perpendicular - leaf.Cd_parallel) * (cosTh * cosTh);
-  const Cn = leaf.Cn_max * Math.sin(2 * Math.atan2(sinTh, cosTh));
 
-  // aerodynamic forces (drag + normal) 
-  const A = Math.PI * leaf.R * leaf.R;
-  const qbar = 0.5 * rho_air * (V * V);
+  // sin(2θ) = 2 sinθ cosθ  → avoids trig
+  const Cn = leaf.Cn_max * (2 * sinTh * cosTh);
 
-  const F_drag   = v_hat.clone().multiplyScalar(-qbar * A * Cd);
-  const signCos  = Math.sign(cosTh);
-  const F_normal = n.clone().multiplyScalar(-qbar * A * Cn * signCos);
+  // Aero magnitudes (use V^2 directly for qbar)
+  const A    = leaf.area;
+  const qbar = 0.5 * rho_air * V2;
 
-  const F_aero = F_drag.clone().add(F_normal);
+  // F_aero = F_drag + F_normal (in world)
+  // Use addScaledVector to avoid temporaries
+  _Faero.copy(_v_hat).multiplyScalar(-qbar * A * Cd);
+  _Faero.addScaledVector(n, -qbar * A * Cn * signCos);
 
-  // center-of-pressure shift & moment (project into local, zero z, normalize, back to world) 
-  const q_conj = leaf.q.clone().conjugate(); // do NOT mutate leaf.q
-  const v_parallel_local = v_hat.clone().applyQuaternion(q_conj);
-  v_parallel_local.z = 0;
+  // Center-of-pressure offset & moment
+  _q_conj.copy(leaf.q).conjugate();
+  _r_local.copy(_v_hat).applyQuaternion(_q_conj); // flow dir in local
+  _r_local.z = 0;                                  // in-plane component only
 
-  const inPlaneLen = Math.hypot(v_parallel_local.x, v_parallel_local.y);
-  if (inPlaneLen > 1e-8) v_parallel_local.multiplyScalar(1 / inPlaneLen); else v_parallel_local.set(0,0,0);
-
-  const r_CoP_local = v_parallel_local.multiplyScalar(-leaf.aCoP * leaf.R);
-  const r_CoP_world = r_CoP_local.clone().applyQuaternion(leaf.q);
-
-  // aerodynamic moment (about CoM) 
-  const M_aero = new THREE.Vector3().copy(r_CoP_world).cross(F_aero);
-
-  // gravity & resultant (gravity acts at CoM → no gravity moment here) 
-  const F_grav = new THREE.Vector3(0, -leaf.mass * g, 0);
-  const F_total = F_aero.clone().add(F_grav);
-  const M_total = M_aero;
-
-  // final sanity
-  if (![F_total.x, F_total.y, F_total.z, M_total.x, M_total.y, M_total.z].every(Number.isFinite)) {
-    throw new Error('compute_forces_and_moments produced non-finite output');
+  const inPlane2 = _r_local.x * _r_local.x + _r_local.y * _r_local.y;
+  if (inPlane2 > 1e-16) {
+    const invLen = 1 / Math.sqrt(inPlane2);
+    _r_local.multiplyScalar(-leaf.aCoP * leaf.R * invLen);
+  } else {
+    _r_local.set(0, 0, 0);
   }
 
-  return { F: F_total, M: M_total };
+  _r_world.copy(_r_local).applyQuaternion(leaf.q);
+  _Mtmp.crossVectors(_r_world, _Faero);           // M_aero
+
+  outF.set(_Faero.x, _Faero.y - leaf.mass * g, _Faero.z)
+  outM.copy(_Mtmp)
+  return
 }
+

@@ -1,6 +1,20 @@
+<!--
+ @Author: alex 
+ @Date: 2025-08-18 14:18:06 
+ @Last Modified by: alex
+ @Last Modified time: 2025-08-18 16:32:18
+ -->
+
+
 <!doctype html>
+
 <html lang="en">
-<!-- Import map: same as your current file -->
+  
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Import map: same as your current file -->
 <script type="importmap">
     {
       "imports": {
@@ -8,10 +22,6 @@
       }
     }
   </script>
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     /* Page background & basic text styles (behind everything) */
@@ -69,15 +79,9 @@
   <!-- Scrollable text ABOVE the scene (z-index: 5) -->
   <header class="copy">
     <h1>falling leaves</h1>
-    <p>
-      Here are some words you might want to read. It's also possible you don't want to. But by this point you've already read them.
-    </p>
   </header>
 
   <div class="spacer"></div>
-
-  <!-- Put this where you want the repeated blocks to appear -->
-  <section id="copies-target"></section>
 
   <!-- Define the block once inside a <template> (it won't render by itself) -->
   <template id="copy-block">
@@ -85,24 +89,13 @@
       <h2>Section {{i}}</h2>
       <p>
         Here are some words you might want to read. It's also possible you don't want to. But by this point you've already read them.
-        <div class="spacer"></div>
       </p>
+      <div class="spacer"></div>
     </section>
   </template>
 
   <!-- Put this where you want the repeated blocks to appear -->
   <section id="copies-target"></section>
-
-  <!-- Define the block once inside a <template> (it won't render by itself) -->
-  <template id="copy-block">
-    <section class="copy">
-      <h2>Section {{i}}</h2>
-      <p>
-        This is a repeated block. You can put any markup here—paragraphs,
-        images, buttons, whatever. The {{i}} will be replaced with the index.
-      </p>
-    </section>
-  </template>
 
   <!-- Tiny helper to stamp the template N times -->
   <script>
@@ -135,6 +128,7 @@
     // Example: make 8 copies
     repeatTemplate('#copy-block', 8, '#copies-target');
   </script>
+  
 </body>
 
 </html>
