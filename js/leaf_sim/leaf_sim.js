@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-20 18:32:26
+ * @Last Modified time: 2025-08-21 14:21:06
  */
 
 import * as THREE from 'three';
@@ -23,10 +23,12 @@ import { AirBackgroundSwirl } from './air.js';
 console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
-let domain_wire = null
+let domain_wire = null;
+let _hudVisible = false;
 
 const debug_params = {
-    is_draw_air_velocity_2d: true,
+    is_show_hud: false,
+    is_draw_air_velocity_2d: false,
 };
 
 const L = new THREE.Vector3(60, 500, 80);
@@ -210,12 +212,29 @@ quiver.setVisible(debug_params.is_draw_air_velocity_2d);
 
 /* -------------------- SCROLL → CAMERA (immersive only) -------------------- */
 
+// Add near your SCROLL & camera setup
+const SCROLL_X = {
+    baseCamX: domain.L.x * 0.5,
+    travelX: domain.L.x * 0.30,
+    dir: +1,
+};
+
+// Quick global bridge so index4.html can drive the camera
+window.leafSimScroll = {
+    setProgress(p) {
+        // p in [0..1]
+        cam.position.y = SCROLL.baseCamY + SCROLL.dir * (p * SCROLL.travelY);
+        const sX = (p * 2) - 1;
+        cam.position.x = SCROLL_X.baseCamX + SCROLL_X.dir * (sX * SCROLL_X.travelX);
+        cam.lookAt(domain.L.x / 2, cam.position.y, 0);
+    }
+};
 
 
 // 1) Robust scroll source (works on desktop & mobile)
-const SCROLL_SRC = (document.getElementById('text-overlay-element') ?? document.scrollingElement) || document.documentElement;
+let SCROLL_EL = (document.getElementById('text-overlay-element') ?? document.scrollingElement) || document.documentElement;
 
-console.log('SCROLL_SRC = ' + SCROLL_SRC.tagName)
+console.log('SCROLL_EL = ' + SCROLL_EL.tagName)
 
 // 2) Mapping state
 const SCROLL = {
@@ -252,8 +271,8 @@ function recomputeScrollMapping() {
 
 // 5) Normalized scroll progress [0..1]
 function scrollProgress() {
-    const range = Math.max(1, SCROLL_SRC.scrollHeight - SCROLL_SRC.clientHeight);
-    return THREE.MathUtils.clamp(SCROLL_SRC.scrollTop / range, 0, 1);
+    const range = Math.max(1, SCROLL_EL.scrollHeight - SCROLL_EL.clientHeight);
+    return THREE.MathUtils.clamp(SCROLL_EL.scrollTop / range, 0, 1);
 }
 
 // 6) Apply mapping (immersive only)
@@ -266,17 +285,60 @@ function syncCameraToScroll() {
     console.log(`sync set cam.position.y = ${cam.position.y}`)
 }
 
-// 6) Re-size domain based on size of content
+// 7) Re-size domain based on size of content
 function setDomainSizeFromContent() {
-
+    // TODO
     domain.L.set()
 }
+
+// 8) expose function to re-set scrollable element
+/**
+ * Switch which DOM element drives the vertical scroll → camera.y mapping.
+ * - Detaches the old listener, attaches the new one
+ * - Recomputes mapping (content heights may differ)
+ * - Immediately syncs the camera
+ *
+ * @param {Element} el  A scrollable element (with scrollTop/scrollHeight/clientHeight)
+ * @returns {Element}   The element now in use
+ */
+export function setScrollElement(el) {
+    if (!el || typeof el.scrollTop !== 'number') {
+        console.warn('setScrollElement: expected a scrollable element; ignoring', el);
+        return SCROLL_EL;
+    }
+    if (el === SCROLL_EL) return SCROLL_EL;
+
+    // 1) detach old listener (if any)
+    try { SCROLL_EL.removeEventListener('scroll', syncCameraToScroll, { passive: true }); } catch { }
+
+    // 2) swap source
+    SCROLL_EL = el;
+
+    // 3) attach new listener
+    SCROLL_EL.addEventListener('scroll', syncCameraToScroll, { passive: true });
+
+    // 4) mapping depends on viewport + content height → recompute
+    try { view.fit?.(); } catch { }
+    recomputeScrollMapping();
+
+    // 5) bring camera into immediate agreement with the new source
+    syncCameraToScroll();
+
+    return SCROLL_EL;
+}
+
+/** Optional convenience getter (import if you want it) */
+export function getScrollElement() {
+    return SCROLL_EL;
+}
+
+
 
 // Wire it up
 recomputeScrollMapping();
 syncCameraToScroll();
 
-SCROLL_SRC.addEventListener('scroll', syncCameraToScroll, { passive: true });
+SCROLL_EL.addEventListener('scroll', syncCameraToScroll, { passive: true });
 window.addEventListener('resize', () => { view.fit?.(); recomputeScrollMapping(); syncCameraToScroll(); }, { passive: true });
 
 if (window.visualViewport) {
@@ -333,6 +395,9 @@ window.addEventListener('keydown', (e) => {
     }
     if (e.key === 'q' && !e.repeat) {
         quiver.toggleVisibility();
+    }
+    if (e.key === 'z' && !e.repeat) {
+        _hudVisible = !_hudVisible;
     }
 });
 
@@ -522,6 +587,8 @@ function hud_quiver_info() {
 }
 
 function update_hud(substep_stats = null) {
+    hud.hidden = !_hudVisible;
+
     if (!leaves.length) { hud.textContent = 'no leaves'; return; }
     const L0 = leaves[0];
 
