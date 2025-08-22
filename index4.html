@@ -1,3 +1,10 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-08-22 15:34:48 
+ * @Last Modified by: alex
+ * @Last Modified time: 2025-08-22 15:35:08
+ */
+
 <!doctype html>
 <html lang="en">
 
@@ -24,10 +31,10 @@
   <template id="repeated-text">
     <div class="copy">
       <div class="text">
-        <p>Here are some words that you may want to read.<span data-idx></span></p>
+        <p>Here are some words that you may want to read.</p>
         <p>You also may not want to read them.</p>
         <p>But by now you've already read them.</p>
-        <p>(<span data-idx></span> out of <span data-total></span>)</p>
+        <p style="color:#af2ea9">(<span data-idx></span> out of <span data-total></span>)</p>
       </div>
       <div class="spacer"></div>
     </div>
@@ -43,7 +50,8 @@
           <div class="center-col">
             <h1>falling leaves — page 1</h1>
             <nav class="nav-row">
-              <a href="#page-2" class="nav-link">next</a>
+              <!-- first page -->
+              <a href="#page-2" class="nav-link next">next →</a>
             </nav>
           </div>
         </header>
@@ -61,8 +69,9 @@
           <div class="center-col">
             <h1>falling leaves — page 2</h1>
             <nav class="nav-row">
-              <a href="#page-1" class="nav-link">prev</a>
-              <a href="#page-3" class="nav-link">next</a>
+              <!-- middle page -->
+              <a href="#page-1" class="nav-link prev">← prev</a>
+              <a href="#page-3" class="nav-link next">next →</a>
             </nav>
           </div>
         </header>
@@ -80,7 +89,8 @@
           <div class="center-col">
             <h1>falling leaves — page 3</h1>
             <nav class="nav-row">
-              <a href="#page-2" class="nav-link">prev</a>
+              <!-- last page -->
+              <a href="#page-2" class="nav-link prev">← prev</a>
             </nav>
           </div>
         </header>
@@ -143,6 +153,66 @@
     document.querySelectorAll('.scroller').forEach(el => wire(el));
   })();
 </script>
+
+<script type="module">
+  import { view } from './js/leaf_sim/leaf_sim.js';
+
+  const strip = document.getElementById('page-strip');
+  const pages = Array.from(strip.querySelectorAll('.page'));
+
+  // 0) set the horizontal scroll source once
+  view.setScrollSource({ x: strip });
+  view.syncCameraToScroll?.();
+
+  function scrollerFor(page) {
+    return (
+      page.querySelector('[data-camera-scroll-source]') ||
+      page.querySelector(':scope .page-body.scroller') ||
+      page.querySelector(':scope .scroller')
+    );
+  }
+
+  function activate(page) {
+    const el = scrollerFor(page);
+    if (el) {
+      // kwargs-style setter: pass the Y source explicitly
+      view.setScrollSource({ y: el });
+      view.syncCameraToScroll?.(); // optional: instant snap
+    }
+  }
+
+  // 1) React to horizontal paging
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      let best = null;
+      for (const e of entries) {
+        if (e.isIntersecting && (!best || e.intersectionRatio > best.intersectionRatio)) best = e;
+      }
+      if (best) activate(best.target);
+    }, { root: strip, threshold: [0.55, 0.75, 0.95] });
+    pages.forEach(p => io.observe(p));
+  }
+
+  // 2) Pre-empt on nav clicks
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#page-"]');
+    if (!a) return;
+    const id = a.getAttribute('href').slice(1);
+    const page = document.getElementById(id);
+    if (page) activate(page);
+  });
+
+  // 3) Deep links & back/forward
+  function fromHash() {
+    const id = location.hash.slice(1);
+    const page = id ? document.getElementById(id) : pages[0];
+    if (page) activate(page);
+  }
+  window.addEventListener('hashchange', fromHash);
+  fromHash(); // initial
+</script>
+
+
 
 <!-- <script type="module">
   import { copyElementNTimes } from './js/util.js';

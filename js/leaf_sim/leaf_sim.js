@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-21 14:21:06
+ * @Last Modified time: 2025-08-22 15:54:07
  */
 
 import * as THREE from 'three';
@@ -31,7 +31,8 @@ const debug_params = {
     is_draw_air_velocity_2d: false,
 };
 
-const L = new THREE.Vector3(60, 500, 80);
+const cam_z = -40;
+const L = new THREE.Vector3(180, 500, 80);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
 
@@ -97,7 +98,12 @@ const swirl_population_params = {
 // --- camera params ---
 const cam_params = {
     projection: 'perspective', // 'orthographic', 'perspective'
-    scope: 'immersive' // 'global', 'immersive'
+    scope: 'distance', // 'global', 'immersive', 'distance'. scope = 'distance' may only be used with projection = 'perspective'
+    distance: 40, // [m], only relevant for scope = 'distance'. The distance from the camera to the edge of the scene, supplied as a positive value.
+}
+
+if ((cam_params.scope === 'distance') && (cam_params.projection === 'orthographic')) {
+    Error('Cannot use scope = distance with projection = orthographic')
 }
 
 /* ----------------------------- AIR ----------------------------- */
@@ -150,19 +156,23 @@ let _quiver_frame = 0;            // throttle counter
 
 /* ------------------------------ HUD (debug) ----------------------------- */
 const hud = document.createElement('pre');
-hud.style.position = 'fixed';
-hud.style.top = '0.5%';
-hud.style.left = '0.5%';
-hud.style.margin = '0';
-hud.style.padding = '8px 10px';
-hud.style.background = 'rgba(0,0,128,0.6)';
-hud.style.color = '#cde';
-hud.style.font = '12px/1.3 monospace';
-hud.style.borderRadius = '8px';
-hud.style.pointerEvents = 'none';
-hud.style.zIndex = '10';
+Object.assign(hud.style, {
+    position: 'fixed',
+    top: '0.5%',
+    left: '0.5%',
+    margin: '0',
+    padding: '8px 10px',
+    background: 'rgba(0,0,128,0.6)',
+    color: '#cde',
+    font: '12px/1.3 monospace',
+    borderRadius: '8px',
+    pointerEvents: 'none',
+    zIndex: '10',
+});
 hud.textContent = 'booting…';
 document.body.appendChild(hud);
+// Small helpers
+const _numfmt = (x, precision=3) => Number.isFinite(x) ? x.toFixed(precision) : 'NaN';
 
 /* --------------------------- THREE.JS SCENE SETUP -------------------------- */
 const view_container = document.createElement('div');
@@ -189,6 +199,9 @@ function make_camera(scope) {
     // arguments don't matter - defaults get overwritten by attach_view anyway
     if (scope === 'perspective') {
         const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 5000); // fov=40° default
+        if (cam_params.scope === 'distance') {
+            cam.position.set(0, 0, -cam_params.distance)
+        }
         return cam;
     } else {
         const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 10000);
@@ -203,188 +216,59 @@ scene.add(cam);
 const leafRenderer = new PerLeafRenderer();
 leafRenderer.begin(scene);
 
-// const view = attach_view(renderer, cam, view_container, domain, cam_params.scope);
-const view = new View(renderer, cam, view_container, domain, cam_params.scope);
+export const view = new View(renderer, cam, view_container, domain, cam_params.scope);
+view.setScope(cam_params.scope);
+view.setProjection(cam_params.projection);
+view.setDistance(cam_params.distance);
+view.setScrollSource({
+    y: (document.scrollingElement || document.documentElement),
+    x: document.getElementById('page-strip')
+});
+view.setPanDir({ x: -1, y: -1 });
 
 const quiver = new QuiverRenderer(quiver_params);
 quiver.begin(scene, domain);
 quiver.setVisible(debug_params.is_draw_air_velocity_2d);
 
-/* -------------------- SCROLL → CAMERA (immersive only) -------------------- */
-
-// Add near your SCROLL & camera setup
-const SCROLL_X = {
-    baseCamX: domain.L.x * 0.5,
-    travelX: domain.L.x * 0.30,
-    dir: +1,
-};
-
-// Quick global bridge so index4.html can drive the camera
-window.leafSimScroll = {
-    setProgress(p) {
-        // p in [0..1]
-        cam.position.y = SCROLL.baseCamY + SCROLL.dir * (p * SCROLL.travelY);
-        const sX = (p * 2) - 1;
-        cam.position.x = SCROLL_X.baseCamX + SCROLL_X.dir * (sX * SCROLL_X.travelX);
-        cam.lookAt(domain.L.x / 2, cam.position.y, 0);
-    }
-};
-
-
-// 1) Robust scroll source (works on desktop & mobile)
-let SCROLL_EL = (document.getElementById('text-overlay-element') ?? document.scrollingElement) || document.documentElement;
-
-console.log('SCROLL_EL = ' + SCROLL_EL.tagName)
-
-// 2) Mapping state
-const SCROLL = {
-    maxY: NaN,
-    minY: NaN,
-    baseCamY: NaN,             // camera y at top of page
-    travelY: NaN,              // how far cam.y moves from top→bottom
-    dir: -1,                 // +1: text & scene move together, -1: invert
-};
-
-// 3) Compute visible height of the scene (world meters) with current camera
-function viewHeightWorld() {
-    if (cam.isOrthographicCamera) {
-        return (cam.top - cam.bottom);
-    } else {
-        // perspective: visible height at z=0 (where we look)
-        const d = Math.abs(cam.position.z); // camera is at -d looking toward z=0 // walrus
-        const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
-        return 2 * d * tan;
-    }
-}
-
-// 4) Recompute mapping whenever size/projection changes
-function recomputeScrollMapping() {
-    const vh = viewHeightWorld();
-    // Keep camera centered within [0..Ly]; let it traverse only what fits
-    const minY = vh * 0.5; // [m]
-    const maxY = domain.L.y - vh * 0.5; // [m]
-    SCROLL.minY = minY;
-    SCROLL.maxY = maxY;
-    SCROLL.baseCamY = (SCROLL.dir >= 0) ? minY : maxY; // [m]
-    SCROLL.travelY = Math.max(0, maxY - minY); // [m]
-}
-
-// 5) Normalized scroll progress [0..1]
-function scrollProgress() {
-    const range = Math.max(1, SCROLL_EL.scrollHeight - SCROLL_EL.clientHeight);
-    return THREE.MathUtils.clamp(SCROLL_EL.scrollTop / range, 0, 1);
-}
-
-// 6) Apply mapping (immersive only)
-function syncCameraToScroll() {
-    if (view.get_scope() !== 'immersive') return;
-    const p = scrollProgress(); // 0..1
-    console.log(`scroll prog = ${p.toFixed(3)}`)
-    cam.position.y = SCROLL.baseCamY + SCROLL.dir * (p * SCROLL.travelY);
-    cam.lookAt(domain.L.x / 2, cam.position.y, 0);
-    console.log(`sync set cam.position.y = ${cam.position.y}`)
-}
-
-// 7) Re-size domain based on size of content
-function setDomainSizeFromContent() {
-    // TODO
-    domain.L.set()
-}
-
-// 8) expose function to re-set scrollable element
-/**
- * Switch which DOM element drives the vertical scroll → camera.y mapping.
- * - Detaches the old listener, attaches the new one
- * - Recomputes mapping (content heights may differ)
- * - Immediately syncs the camera
- *
- * @param {Element} el  A scrollable element (with scrollTop/scrollHeight/clientHeight)
- * @returns {Element}   The element now in use
- */
-export function setScrollElement(el) {
-    if (!el || typeof el.scrollTop !== 'number') {
-        console.warn('setScrollElement: expected a scrollable element; ignoring', el);
-        return SCROLL_EL;
-    }
-    if (el === SCROLL_EL) return SCROLL_EL;
-
-    // 1) detach old listener (if any)
-    try { SCROLL_EL.removeEventListener('scroll', syncCameraToScroll, { passive: true }); } catch { }
-
-    // 2) swap source
-    SCROLL_EL = el;
-
-    // 3) attach new listener
-    SCROLL_EL.addEventListener('scroll', syncCameraToScroll, { passive: true });
-
-    // 4) mapping depends on viewport + content height → recompute
-    try { view.fit?.(); } catch { }
-    recomputeScrollMapping();
-
-    // 5) bring camera into immediate agreement with the new source
-    syncCameraToScroll();
-
-    return SCROLL_EL;
-}
-
-/** Optional convenience getter (import if you want it) */
-export function getScrollElement() {
-    return SCROLL_EL;
-}
-
-
-
-// Wire it up
-recomputeScrollMapping();
-syncCameraToScroll();
-
-SCROLL_EL.addEventListener('scroll', syncCameraToScroll, { passive: true });
-window.addEventListener('resize', () => { view.fit?.(); recomputeScrollMapping(); syncCameraToScroll(); }, { passive: true });
-
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-        recomputeScrollMapping();
-        syncCameraToScroll();
+        view.syncCameraToScroll()
     }, { passive: true });
 }
 
 window.addEventListener('keydown', (e) => {
     if (e.key === 'g') {
-        view.set_scope('global');
-        recomputeScrollMapping();
-        syncCameraToScroll();
+        // view.set_scope('global');
+        // view.syncCameraToScroll()
         return;
     }
     if (e.key === 'i') {
-        view.set_scope('immersive');
-        recomputeScrollMapping();
-        syncCameraToScroll();
+        // view.set_scope('immersive');
+        // view.syncCameraToScroll()
         return;
     }
 
     // Projection hotkeys (idempotent)
     if (e.key === 'o') { // force ORTHOGRAPHIC
         if (!cam.isOrthographicCamera) {
-            scene.remove(cam);
-            cam = make_camera('orthographic');
-            scene.add(cam);
-            view.swap_camera(cam, 'orthographic'); // if your swap_camera only takes (cam), extra arg is ignored
-            recomputeScrollMapping();
-            syncCameraToScroll();
-            console.log('projection → orthographic');
+            // scene.remove(cam);
+            // cam = make_camera('orthographic');
+            // scene.add(cam);
+            // view.swap_camera(cam, 'orthographic'); // if your swap_camera only takes (cam), extra arg is ignored
+            // view.syncCameraToScroll()
+            // console.log('projection → orthographic');
         }
         return;
     }
 
     if (e.key === 'p') { // force PERSPECTIVE
         if (!cam.isPerspectiveCamera) {
-            scene.remove(cam);
-            cam = make_camera('perspective');
-            scene.add(cam);
-            view.swap_camera(cam, 'perspective');  // ok if swap_camera(cam) in your build
-            recomputeScrollMapping();
-            syncCameraToScroll();
-            console.log('projection → perspective');
+            // scene.remove(cam);
+            // cam = make_camera('perspective');
+            // scene.add(cam);
+            // view.swap_camera(cam, 'perspective');  // ok if swap_camera(cam) in your build
+            // view.syncCameraToScroll();
+            // console.log('projection → perspective');
         }
         return;
     }
@@ -420,38 +304,34 @@ function refreshDomainWire() {
     domain_wire = add_domain_box();
 }
 
+// Camera/frustum line(s) — unchanged logic, just cleaner text assembly
 function hud_camera_info() {
+    const prec = 3;
     const rect = renderer.domElement.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
+    const w = rect.width | 0, h = rect.height | 0;
     const proj = cam.isOrthographicCamera ? 'orthographic' : 'perspective';
-    const scope = view.get_scope(); // 'global' | 'immersive'
-
-    let first_two_lines = '';
+    const scope = view.scope;
 
     if (cam.isOrthographicCamera) {
         const fw = cam.right - cam.left;
         const fh = cam.top - cam.bottom;
-        const pxmx = (w / fw).toFixed(2);
-        const pxmy = (h / fh).toFixed(2);
-        first_two_lines = `projection=${proj}  scope=${scope}\ncanvas=${w | 0}×${h | 0}px  frustum=${fw.toFixed(2)}×${fh.toFixed(2)}m  px/m=(${pxmx}, ${pxmy})`;
-    } else if (cam.isPerspectiveCamera) {
-        // perspective: report px/m at z=0 (the look-at plane)
+        const pxmx = _numfmt(w / fw, prec), pxmy = _numfmt(h / fh, prec);
+        return [
+            `projection=${proj}  scope=${scope}`,
+            `canvas=${w}×${h}px  frustum=${_numfmt(fw, prec)}×${_numfmt(fh, prec)}m  px/m=(${pxmx}, ${pxmy})`
+        ].join('\n');
+    } else {
+        // perspective: report visible extent at look plane z=0 (your convention)
         const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
-        const d = Math.abs(cam.position.z); // we position camera to look at z=0
+        const d = Math.abs(cam.position.z);
         const visibleH = 2 * d * tan;
         const visibleW = visibleH * (w / h);
-        const pxmx = (w / visibleW).toFixed(2);
-        const pxmy = (h / visibleH).toFixed(2);
-        first_two_lines = `projection=${proj}  scope=${scope}\ncanvas=${w | 0}×${h | 0}px  vis@z=0=${visibleW.toFixed(2)}×${visibleH.toFixed(2)}m  px/m@z=0=(${pxmx}, ${pxmy})`;
+        const pxmx = _numfmt(w / visibleW, prec), pxmy = _numfmt(h / visibleH, prec);
+        return [
+            `projection=${proj}  scope=${scope}`,
+            `canvas=${w}×${h}px  vis@z=0=${_numfmt(visibleW, prec)}×${_numfmt(visibleH, prec)}m  px/m@z=0=(${pxmx}, ${pxmy})`
+        ].join('\n');
     }
-
-    // Camera position and direction
-    const posStr = `[${cam.position.x.toFixed(2)}, ${cam.position.y.toFixed(2)}, ${cam.position.z.toFixed(2)}]`;
-    const dir = new THREE.Vector3();
-    cam.getWorldDirection(dir); // unit vector the camera is facing
-    const dirStr = `[${dir.x.toFixed(3)}, ${dir.y.toFixed(3)}, ${dir.z.toFixed(3)}]`;
-
-    return `${first_two_lines}\ncam position = ${posStr}   cam dir = ${dirStr}`;
 }
 
 
@@ -578,6 +458,8 @@ let substep_history = Array(N_HISTORY).fill(0);
 let prev_ms = performance.now();
 let acc = 0;
 
+// hud
+
 function hud_quiver_info() {
     if (!quiver) {
         return 'quiver = off'
@@ -587,42 +469,48 @@ function hud_quiver_info() {
 }
 
 function update_hud(substep_stats = null) {
-    hud.hidden = !_hudVisible;
+    const prec = 3;
+  hud.hidden = !_hudVisible;
+  if (hud.hidden) return;
 
-    if (!leaves.length) { hud.textContent = 'no leaves'; return; }
-    const L0 = leaves[0];
+  if (!leaves.length) { hud.textContent = 'no leaves'; return; }
 
-    const substeps_line = substep_stats
-        ? `substeps (last ${N_HISTORY}): inst=${substep_stats.inst} | avg=${substep_stats.avg.toFixed(2)} | `
-        + `min=${substep_stats.min} | max=${substep_stats.max}\n`
-        : '';
+  // Camera + pan window (new view exposes debugPan() = { vis, x, y })
+  const camInfo = hud_camera_info();
+  const pan = view.debugPan(); // {vis:{w,h}, x:{min,max,base,travel}, y:{...}}
+  const vis = pan.vis;
 
-    hud.textContent =
-        hud_camera_info() + '\n\n' +
+  // Optional perf line
+  const substeps_line = substep_stats
+    ? `substeps (last ${N_HISTORY}): inst=${substep_stats.inst} | avg=${_numfmt(substep_stats.avg,prec)} | min=${substep_stats.min} | max=${substep_stats.max}\n`
+    : '';
 
-        `SCROLL.minY = ${SCROLL.minY}\n` +
-        `SCROLL.maxY = ${SCROLL.maxY}\n` +
-        `SCROLL.travelY = ${SCROLL.travelY}\n` +
-        `SCROLL.baseCamY = ${SCROLL.baseCamY}\n` +
-        `SCROLL.dir = ${SCROLL.dir}\n\n` +
+  // Camera position & facing dir
+  const posStr = `[${_numfmt(cam.position.x)}, ${_numfmt(cam.position.y)}, ${_numfmt(cam.position.z)}]`;
+  const dirVec = new THREE.Vector3(); cam.getWorldDirection(dirVec);
+  const dirStr = `[${_numfmt(dirVec.x)}, ${_numfmt(dirVec.y)}, ${_numfmt(dirVec.z)}]`;
 
-        hud_quiver_info() + '\n\n' +
+  // First leaf snapshot
+  const L0 = leaves[0];
 
-        substeps_line +
-        `t = ${t.toFixed(3)} s\n\n` +
-
-        '--- leaf 1 ---\n' +
-
-        `x0 = [${L0.x.x.toFixed(2)}, ${L0.x.y.toFixed(2)}, ${L0.x.z.toFixed(2)}]\n` +
-        `v0 = [${L0.v.x.toFixed(2)}, ${L0.v.y.toFixed(2)}, ${L0.v.z.toFixed(2)}]\n` +
-        `alpha0 = ${L0.alpha.toFixed(2)}\n` +
-        `q0 = [${L0.q.w.toFixed(3)}, ${L0.q.x.toFixed(3)}, ${L0.q.y.toFixed(3)}, ${L0.q.z.toFixed(3)}]\n` +
-        `|v0| = ${L0.v.length().toFixed(2)} m/s\n` +
-        `|ω0| = ${L0.omega.length().toFixed(2)} rad/s\n\n` +
-
-        `swirls = ${air.swirls.length} / ${swirl_population_params.n_max}\n` +
-        `leaves = ${leaves.length} / ${leaf_population_params.n_max}\n`;
-
+  hud.textContent =
+    camInfo + '\n' +
+    `cam position = ${posStr}   cam dir = ${dirStr}\n\n` +
+    `visW=${_numfmt(vis.w)}  visH=${_numfmt(vis.h)}\n` +
+    `pan.x: base=${_numfmt(pan.x.base)}  min=${_numfmt(pan.x.min)}  max=${_numfmt(pan.x.max)}  travel=${_numfmt(pan.x.travel)}\n` +
+    `pan.y: base=${_numfmt(pan.y.base)}  min=${_numfmt(pan.y.min)}  max=${_numfmt(pan.y.max)}  travel=${_numfmt(pan.y.travel)}\n` +
+    hud_quiver_info() + '\n\n' +
+    substeps_line +
+    `t = ${_numfmt(t)} s\n\n` +
+    '--- leaf 1 ---\n' +
+    `x0 = [${_numfmt(L0.x.x)}, ${_numfmt(L0.x.y)}, ${_numfmt(L0.x.z)}]\n` +
+    `v0 = [${_numfmt(L0.v.x)}, ${_numfmt(L0.v.y)}, ${_numfmt(L0.v.z)}]\n` +
+    `alpha0 = ${_numfmt(L0.alpha)}\n` +
+    `q0 = [${_numfmt(L0.q.w)}, ${_numfmt(L0.q.x)}, ${_numfmt(L0.q.y)}, ${_numfmt(L0.q.z)}]\n` +
+    `|v0| = ${_numfmt(L0.v.length())} m/s\n` +
+    `|ω0| = ${_numfmt(L0.omega.length())} rad/s\n\n` +
+    `swirls = ${air.swirls.length} / ${swirl_population_params.n_max}\n` +
+    `leaves = ${leaves.length} / ${leaf_population_params.n_max}\n`;
 }
 
 function loop(now_ms) {
