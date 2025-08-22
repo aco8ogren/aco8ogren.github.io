@@ -1,21 +1,13 @@
-<!--
- @Author: alex 
- @Date: 2025-08-18 14:18:06 
- @Last Modified by: alex
- @Last Modified time: 2025-08-18 16:32:18
- -->
-
-
 <!doctype html>
-
 <html lang="en">
-  
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leaf Sim – Two-Panel MWE</title>
 
-  <!-- Import map: same as your current file -->
-<script type="importmap">
+  <!-- three.js import map (for later JS work) -->
+  <script type="importmap">
     {
       "imports": {
         "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
@@ -23,112 +15,193 @@
     }
   </script>
 
-  <style>
-    /* Page background & basic text styles (behind everything) */
-    html,
-    body {
-      margin: 0;
-      height: 100%;
-      background: #10131a;
-      color: #eaeff7;
-      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      overflow-y: auto;
-    }
-
-    /* This matches your JS scene container being fixed with z-index: 0.
-         We don't declare it here; leaf_sim.js creates it and sets zIndex='0'. */
-
-    /* Scrollable copy that must appear *above* the scene.
-         IMPORTANT: position + z-index > 0 puts it in front of the fixed scene. */
-    .copy {
-      position: relative;
-      /* enables z-index to take effect */
-      z-index: 5;
-      /* > 0 (scene), < 10 (your HUD), adjust if needed */
-      max-width: 60ch;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      background: transparent;
-      /* keep it on top without tint */
-    }
-
-    /* Spacer blocks to create vertical height so the page scrolls */
-    .spacer {
-      position: relative;
-      /* keep the same stacking context as .copy */
-      z-index: 5;
-      /* ensure they’re also above the scene */
-      height: 45vh;
-    }
-
-    /* Optional: a full-viewport section to mark where the scene lives visually */
-    .scene-slot {
-      position: relative;
-      z-index: 1;
-      /* below .copy/.spacer but above page background (not necessary, just semantic) */
-      height: 85vh;
-      /* matches your JS container height-ish so layout feels consistent */
-    }
-  </style>
+  <link rel="stylesheet" href="./style/style4.css">
 </head>
 
-<!-- Load the simulation: it creates a fixed container at z-index: 0 (opaque). -->
-<script type="module" src="./js/leaf_sim/leaf_sim.js"></script>
+<body>
 
-<body id="text-overlay-element">
-  <!-- Scrollable text ABOVE the scene (z-index: 5) -->
-  <header class="copy">
-    <h1>falling leaves</h1>
-  </header>
-
-  <div class="spacer"></div>
-
-  <!-- Define the block once inside a <template> (it won't render by itself) -->
-  <template id="copy-block">
-    <section class="copy">
-      <h2>Section {{i}}</h2>
-      <p>
-        Here are some words you might want to read. It's also possible you don't want to. But by this point you've already read them.
-      </p>
+  <!-- Template for example text -->
+  <template id="repeated-text">
+    <div class="copy">
+      <div class="text">
+        <p>Here are some words that you may want to read.<span data-idx></span></p>
+        <p>You also may not want to read them.</p>
+        <p>But by now you've already read them.</p>
+        <p>(<span data-idx></span> out of <span data-total></span>)</p>
+      </div>
       <div class="spacer"></div>
-    </section>
+    </div>
   </template>
 
-  <!-- Put this where you want the repeated blocks to appear -->
-  <section id="copies-target"></section>
+  <!-- Horizontal strip with two pages -->
+  <div id="page-strip" aria-label="horizontal pages">
 
-  <!-- Tiny helper to stamp the template N times -->
-  <script>
-    // repeat a <template id="..."> N times into a container
-    function repeatTemplate(tplSelector, n, targetSelector, vars = {}) {
-      const tpl = document.querySelector(tplSelector);
-      const target = document.querySelector(targetSelector);
-      if (!tpl || !target) return;
+    <!-- ========== PAGE 1 ========== -->
+    <section class="page" id="page-1">
+      <div class="page-shell">
+        <header class="page-header">
+          <div class="center-col">
+            <h1>falling leaves — page 1</h1>
+            <nav class="nav-row">
+              <a href="#page-2" class="nav-link">next</a>
+            </nav>
+          </div>
+        </header>
 
-      const frag = document.createDocumentFragment();
-      for (let i = 1; i <= n; i++) {
-        // clone the template contents
-        const node = tpl.content.cloneNode(true);
+        <div class="page-body scroller">
+          <div id="copies-target-1"></div>
+        </div>
+      </div>
+    </section>
 
-        // simple {{var}} replacement in text nodes
-        const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
-        let t;
-        while ((t = walk.nextNode())) {
-          t.nodeValue = t.nodeValue
-            .replaceAll('{{i}}', String(i))
-            // optional: provide your own variables via 'vars'
-            .replaceAll('{{N}}', String(n));
-        }
+    <!-- ========== PAGE 2 ========== -->
+    <section class="page" id="page-2">
+      <div class="page-shell">
+        <header class="page-header">
+          <div class="center-col">
+            <h1>falling leaves — page 2</h1>
+            <nav class="nav-row">
+              <a href="#page-1" class="nav-link">prev</a>
+              <a href="#page-3" class="nav-link">next</a>
+            </nav>
+          </div>
+        </header>
 
-        frag.appendChild(node);
-      }
-      target.appendChild(frag);
+        <div class="page-body scroller">
+          <div id="copies-target-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE 3 ========== -->
+    <section class="page" id="page-3">
+      <div class="page-shell">
+        <header class="page-header">
+          <div class="center-col">
+            <h1>falling leaves — page 3</h1>
+            <nav class="nav-row">
+              <a href="#page-2" class="nav-link">prev</a>
+            </nav>
+          </div>
+        </header>
+
+        <div class="page-body scroller">
+          <div id="copies-target-3"></div>
+        </div>
+      </div>
+    </section>
+
+
+  </div>
+
+  <!-- Your simulation (optional, later) -->
+  <script type="module" src="./js/leaf_sim/leaf_sim.js"></script>
+
+  <!-- Call the util AFTER the DOM exists; import via inline module -->
+  <script type="module">
+    import { copyElementNTimes } from './js/util.js';
+
+    // Page 1: copy the template 6 times into scroller-1's target
+    copyElementNTimes('repeated-text', 6, 'copies-target-1');
+
+    // Page 2: also copy the same template (e.g., 3 times)
+    copyElementNTimes('repeated-text', 3, 'copies-target-2');
+
+    // Page 2: also copy the same template (e.g., 3 times)
+    copyElementNTimes('repeated-text', 8, 'copies-target-3');
+  </script>
+</body>
+
+<script>
+  // Auto-show scrollbars on scroll/hover; hide after no activity
+  (function attachAutoHide() {
+    const AUTOHIDE_MS = 1000; // time to hide after last scroll/hover
+
+    function wire(el, timeout = AUTOHIDE_MS) {
+      if (!el) return;
+      let hideId = 0;
+
+      const show = () => {
+        el.classList.add('scrollbars-visible');
+        clearTimeout(hideId);
+        hideId = setTimeout(() => el.classList.remove('scrollbars-visible'), timeout);
+      };
+
+      el.addEventListener('scroll', show, { passive: true });
+      el.addEventListener('mouseenter', show);
+      el.addEventListener('mouseleave', () => el.classList.remove('scrollbars-visible'));
+      el.addEventListener('touchstart', show, { passive: true });
+      el.addEventListener('touchend', () => {
+        clearTimeout(hideId);
+        hideId = setTimeout(() => el.classList.remove('scrollbars-visible'), timeout);
+      }, { passive: true });
+
+      // start hidden; reveal briefly so users discover it
+      setTimeout(show, 50);
     }
 
-    // Example: make 8 copies
-    repeatTemplate('#copy-block', 8, '#copies-target');
-  </script>
-  
-</body>
+    document.querySelectorAll('.scroller').forEach(el => wire(el));
+  })();
+</script>
+
+<!-- <script type="module">
+  import { copyElementNTimes } from './js/util.js';
+
+  function autoWirePagesStrict() {
+    const pages = Array.from(document.querySelectorAll('#page-strip > .page'));
+
+    pages.forEach((page, idx) => {
+      const i = idx + 1;
+
+      // 1) Page id
+      page.id = `page-${i}`;
+
+      // 2) Locate required nodes (strict to your structure)
+      const shell = page.querySelector(':scope > .page-shell');
+      const header = shell?.querySelector(':scope > .page-header .center-col');
+      const nav = header?.querySelector(':scope > .nav-row');
+      const body = shell?.querySelector(':scope > .page-body.scroller');
+
+      if (!shell || !header || !nav || !body) {
+        console.warn(`autoWirePagesStrict: unexpected structure on page index ${i}`);
+        return;
+      }
+
+      // 3) Scroller id
+      body.id = `scroller-${i}`;
+
+      // 4) Copies target id (assumes first child is the target)
+      const target = body.firstElementChild;
+      if (target) {
+        target.id = `copies-target-${i}`;
+      }
+
+      // 5) Rebuild prev/next links
+      nav.innerHTML = '';
+      if (i > 1) {
+        const prev = document.createElement('a');
+        prev.className = 'nav-link';
+        prev.href = `#page-${i - 1}`;
+        prev.textContent = '← prev';
+        nav.appendChild(prev);
+      }
+      if (i < pages.length) {
+        const next = document.createElement('a');
+        next.className = 'nav-link';
+        next.href = `#page-${i + 1}`;
+        next.textContent = 'next →';
+        nav.appendChild(next);
+      }
+
+      // 6) Optional: auto-fill repeated content if section has data-copies
+      const copies = parseInt(page.dataset.copies || '0', 10);
+      if (copies > 0) {
+        copyElementNTimes('repeated-text', copies, `copies-target-${i}`);
+      }
+    });
+  }
+
+  autoWirePagesStrict();
+</script> -->
 
 </html>
