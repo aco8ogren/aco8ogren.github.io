@@ -10,7 +10,7 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:50
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 15:53:44
+ * @Last Modified time: 2025-08-22 18:00:42
  */
 import * as THREE from 'three';
 import { CylindricalDomain, RectangularDomain } from './domain.js';
@@ -29,6 +29,11 @@ export class View {
         this.lookZ = 0;                // scene plane we "look at"
         this.distance = 10;               // meters (only used for scope='distance' + perspective)
 
+        // Damping + settle state
+        this._damp = { lambda: 24, eps: 1e-3 };   // λ [1/s]; higher = snappier. eps = settle tolerance.
+        this._target = new THREE.Vector3(NaN, NaN, NaN);
+        this._settled = true;                    // public: true when camera ≈ target
+
         // pan directions (+1/-1). Default Y = -1 to match your existing “invert Y” feel.
         this.panDir = { x: +1, y: -1 };
 
@@ -46,8 +51,6 @@ export class View {
 
         // bind handlers once
         this._onResize = this.fit.bind(this);
-        this._onScrollX = this.syncCameraToScroll.bind(this);
-        this._onScrollY = this.syncCameraToScroll.bind(this);
 
         // observe container + window
         this._ro = new ResizeObserver(this._onResize);
@@ -57,6 +60,9 @@ export class View {
         // initial fit
         this.fit();
     }
+
+    _onScrollX = () => { this._updateTargetFromScroll(); this._settled = false; };
+    _onScrollY = () => { this._updateTargetFromScroll(); this._settled = false; };
 
     // setters
     setScope(scope) {
@@ -104,7 +110,6 @@ export class View {
         }
     }
 
-    // ----- public API (matches your current usage) -----
     fit() {
         // otherwise we think a little bit
         const w = Math.max(1, Math.floor(this.container.clientWidth)); // [px]
@@ -142,6 +147,7 @@ export class View {
             this.cam.position.z = this.lookZ - this.distance;
 
             // recompute pan windows against the domain and snap to current scroll
+            this._updateTargetFromScroll
             this._recomputePanWindows();
             this.syncCameraToScroll();
             return;
@@ -214,6 +220,7 @@ export class View {
             x: { min: minX, max: maxX, base: baseX, travel: travelX },
             y: { min: minY, max: maxY, base: baseY, travel: travelY },
         };
+        this._updateTargetFromScroll();
     }
 
     _progressFromEl(el, axis) {
@@ -242,8 +249,8 @@ export class View {
         }
     }
 
-    syncCameraToScroll() {
-        if (this.scope !== 'distance') return; // other scopes keep their own logic
+    _updateTargetFromScroll() {
+        if (this.scope !== 'distance') return;
 
         const px = this._pan.x.travel > 0 ? this._progressFromEl(this.scrollEls.x, 'x') : 0.5;
         const py = this._pan.y.travel > 0 ? this._progressFromEl(this.scrollEls.y, 'y') : 0.5;
@@ -251,15 +258,50 @@ export class View {
         const camX = this._pan.x.base + this.panDir.x * (px * this._pan.x.travel);
         const camY = this._pan.y.base + this.panDir.y * (py * this._pan.y.travel);
 
-        this.cam.position.x = isFinite(camX) ? camX : (this.domain?.L?.x ?? 0) * 0.5;
-        this.cam.position.y = isFinite(camY) ? camY : (this.domain?.L?.y ?? 0) * 0.5;
+        const Lx = this.domain?.L?.x ?? 0;
+        const Ly = this.domain?.L?.y ?? 0;
+
+        this._target.set(
+            Number.isFinite(camX) ? camX : Lx * 0.5,
+            Number.isFinite(camY) ? camY : Ly * 0.5,
+            this.lookZ - this.distance
+        );
+    }
+
+
+    syncCameraToScroll(dtSec = 0) {
+        if (this.scope !== 'distance') return this._settled = true;
+
+        // Always refresh target from current scroll position
+        this._updateTargetFromScroll();
+
+        // Clamp dt to avoid giant jumps on tab-switch/frame hiccups
+        const dt = Math.max(0, Math.min(0.1, +dtSec || 0));
+
+        // If no dt (e.g., event tick), just declare not-settled and bail
+        if (dt === 0) { this._settled = false; return false; }
+
+        const { lambda, eps } = this._damp;
+
+        // Exponential damping (frame-rate independent)
+        const nx = THREE.MathUtils.damp(this.cam.position.x, this._target.x, lambda, dt);
+        // const nx = this._target.x;
+        const ny = THREE.MathUtils.damp(this.cam.position.y, this._target.y, lambda, dt);
+
+        this.cam.position.x = nx;
+        this.cam.position.y = ny;
         this.cam.position.z = this.lookZ - this.distance;
 
-        // keep looking down the -Z axis toward the look plane; bias x toward center if you prefer
-        const Lx = this.domain?.Lx ?? this.domain?.L?.x ?? 0;
-        const targetX = this.cam.position.x; // "look toward center-x" convention
-        this.cam.lookAt(targetX, this.cam.position.y, this.lookZ);
+        this.cam.lookAt(this.cam.position.x, this.cam.position.y, this.lookZ);
+
+        const doneX = Math.abs(nx - this._target.x) <= eps;
+        const doneY = Math.abs(ny - this._target.y) <= eps;
+
+        // Public flag other systems can check
+        this._settled = (doneX && doneY);
+        return this._settled;
     }
+
 
     // tiny helper for HUD
     debugPan() { return { vis: this._vis, x: this._pan.x, y: this._pan.y }; }
@@ -290,4 +332,66 @@ export class View {
         this._ro?.disconnect?.();
         window.removeEventListener('resize', this.onResize);
     }
+
+    hud_block(ctx = {}) {
+        const prec = ctx.prec ?? 3;
+        const f = (x) => Number.isFinite(x) ? x.toFixed(prec) : '—';
+        const dir = this._hudTmpDir || (this._hudTmpDir = new THREE.Vector3());
+
+        // Canvas px
+        const rect = this.renderer?.domElement?.getBoundingClientRect?.();
+        const w = rect ? (rect.width | 0) : 0;
+        const h = rect ? (rect.height | 0) : 0;
+
+        // Projection/scope
+        const proj = this.cam?.isOrthographicCamera ? 'orthographic' : 'perspective';
+        const scope = this.scope;
+
+        // Unified visible extents (world meters) + px/m
+        let visLabel = 'vis';
+        let visW = NaN, visH = NaN;
+
+        if (this.cam?.isOrthographicCamera) {
+            // Ortho: visible size IS the frustum size in world units
+            visLabel = 'frustum';
+            visW = (this.cam.right - this.cam.left);
+            visH = (this.cam.top - this.cam.bottom);
+        } else {
+            // Perspective: visible size at the look plane (z=0 by convention)
+            visLabel = 'vis@z=0';
+            const d = Math.abs(this.cam?.position?.z ?? 0);
+            const fov = THREE.MathUtils.degToRad(this.cam?.fov ?? 40);
+            const visH_at_plane = 2 * d * Math.tan(fov * 0.5);
+            visH = visH_at_plane;
+            visW = visH * (w / Math.max(1, h));
+        }
+
+        const pxmX = (w && visW) ? (w / visW) : NaN;
+        const pxmY = (h && visH) ? (h / visH) : NaN;
+
+        // Camera pose
+        this.cam?.getWorldDirection?.(dir);
+        const pos = this.cam?.position || { x: NaN, y: NaN, z: NaN };
+
+        // Pan window (already computed by View)
+        const pan = this.debugPan?.() || { vis: { w: NaN, h: NaN }, x: {}, y: {} };
+        const panLine = (axis) =>
+            `  pan.${axis}: base=${f(pan[axis].base)}  min=${f(pan[axis].min)}  max=${f(pan[axis].max)}  travel=${f(pan[axis].travel)}`;
+
+        return [
+            `View:`,
+            `  projection=${proj}`,
+            `  scope=${scope}`,
+            `  canvas=${w}×${h}px`,
+            `  ${visLabel}=${f(visW)}×${f(visH)}m  px/m=(${f(pxmX)}, ${f(pxmY)})`,
+            `  cam pos=[${f(pos.x)}, ${f(pos.y)}, ${f(pos.z)}]  dir=[${f(dir.x)}, ${f(dir.y)}, ${f(dir.z)}]`,
+            `  visW=${f(pan.vis.w)}  visH=${f(pan.vis.h)}`,
+            panLine('x'),
+            panLine('y'),
+        ].join('\n');
+    }
+
+
+
+
 }

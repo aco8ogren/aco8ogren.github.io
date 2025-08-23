@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 15:54:07
+ * @Last Modified time: 2025-08-22 17:47:25
  */
 
 import * as THREE from 'three';
@@ -19,15 +19,18 @@ import { Leaf } from './leaf.js';
 import { PerLeafRenderer } from './renderer.js';
 import { QuiverRenderer } from './quiver.js';
 import { AirBackgroundSwirl } from './air.js';
+import { HudOrchestrator } from './hud.js';
 
 console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
 let domain_wire = null;
 let _hudVisible = false;
+// hud
+const hud = new HudOrchestrator({ startVisible: true, precision: 3 });
+//
 
 const debug_params = {
-    is_show_hud: false,
     is_draw_air_velocity_2d: false,
 };
 
@@ -35,6 +38,7 @@ const cam_z = -40;
 const L = new THREE.Vector3(180, 500, 80);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
+hud.add(domain);
 
 // --- air parameters ---
 const air_params = {
@@ -112,6 +116,7 @@ const _vel = new THREE.Vector3();
 
 // air
 const air = new AirBackgroundSwirl(air_params);
+hud.add(air);
 
 // background
 function v_air_background(pos, t, out) {
@@ -154,26 +159,6 @@ let quiver_grid = null;           // Float32Array of size count*3 (x,y,z per ins
 let _quiver_frame = 0;            // throttle counter
 
 
-/* ------------------------------ HUD (debug) ----------------------------- */
-const hud = document.createElement('pre');
-Object.assign(hud.style, {
-    position: 'fixed',
-    top: '0.5%',
-    left: '0.5%',
-    margin: '0',
-    padding: '8px 10px',
-    background: 'rgba(0,0,128,0.6)',
-    color: '#cde',
-    font: '12px/1.3 monospace',
-    borderRadius: '8px',
-    pointerEvents: 'none',
-    zIndex: '10',
-});
-hud.textContent = 'booting…';
-document.body.appendChild(hud);
-// Small helpers
-const _numfmt = (x, precision=3) => Number.isFinite(x) ? x.toFixed(precision) : 'NaN';
-
 /* --------------------------- THREE.JS SCENE SETUP -------------------------- */
 const view_container = document.createElement('div');
 view_container.style.position = 'fixed';
@@ -210,13 +195,16 @@ function make_camera(scope) {
 }
 
 const scene = new THREE.Scene();
-let cam = make_camera(cam_params.projection)
+let cam = make_camera(cam_params.projection);
+hud.add(cam);
 scene.add(cam);
 
 const leafRenderer = new PerLeafRenderer();
+hud.add(leafRenderer);
 leafRenderer.begin(scene);
 
 export const view = new View(renderer, cam, view_container, domain, cam_params.scope);
+hud.add(view);
 view.setScope(cam_params.scope);
 view.setProjection(cam_params.projection);
 view.setDistance(cam_params.distance);
@@ -225,8 +213,10 @@ view.setScrollSource({
     x: document.getElementById('page-strip')
 });
 view.setPanDir({ x: -1, y: -1 });
+view.syncCameraToScroll();
 
 const quiver = new QuiverRenderer(quiver_params);
+hud.add(quiver);
 quiver.begin(scene, domain);
 quiver.setVisible(debug_params.is_draw_air_velocity_2d);
 
@@ -281,7 +271,7 @@ window.addEventListener('keydown', (e) => {
         quiver.toggleVisibility();
     }
     if (e.key === 'z' && !e.repeat) {
-        _hudVisible = !_hudVisible;
+        hud.toggle();
     }
 });
 
@@ -303,38 +293,6 @@ function refreshDomainWire() {
     }
     domain_wire = add_domain_box();
 }
-
-// Camera/frustum line(s) — unchanged logic, just cleaner text assembly
-function hud_camera_info() {
-    const prec = 3;
-    const rect = renderer.domElement.getBoundingClientRect();
-    const w = rect.width | 0, h = rect.height | 0;
-    const proj = cam.isOrthographicCamera ? 'orthographic' : 'perspective';
-    const scope = view.scope;
-
-    if (cam.isOrthographicCamera) {
-        const fw = cam.right - cam.left;
-        const fh = cam.top - cam.bottom;
-        const pxmx = _numfmt(w / fw, prec), pxmy = _numfmt(h / fh, prec);
-        return [
-            `projection=${proj}  scope=${scope}`,
-            `canvas=${w}×${h}px  frustum=${_numfmt(fw, prec)}×${_numfmt(fh, prec)}m  px/m=(${pxmx}, ${pxmy})`
-        ].join('\n');
-    } else {
-        // perspective: report visible extent at look plane z=0 (your convention)
-        const tan = Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
-        const d = Math.abs(cam.position.z);
-        const visibleH = 2 * d * tan;
-        const visibleW = visibleH * (w / h);
-        const pxmx = _numfmt(w / visibleW, prec), pxmy = _numfmt(h / visibleH, prec);
-        return [
-            `projection=${proj}  scope=${scope}`,
-            `canvas=${w}×${h}px  vis@z=0=${_numfmt(visibleW, prec)}×${_numfmt(visibleH, prec)}m  px/m@z=0=(${pxmx}, ${pxmy})`
-        ].join('\n');
-    }
-}
-
-
 
 function poisson(lambda) {
     // Knuth’s algorithm
@@ -444,6 +402,7 @@ function step_sim() {
 /* ------------------------------- RUN LOOP ---------------------------------- */
 let t = 0;
 const leaves = init_leaves();
+hud.add(leaves[0])
 
 // setup
 domain_wire = add_domain_box();
@@ -457,61 +416,6 @@ let substep_history = Array(N_HISTORY).fill(0);
 
 let prev_ms = performance.now();
 let acc = 0;
-
-// hud
-
-function hud_quiver_info() {
-    if (!quiver) {
-        return 'quiver = off'
-    } else {
-        return `quiver = on  nx = ${quiver.nx} ny = ${quiver.ny} nz = ${quiver.nz}  `
-    }
-}
-
-function update_hud(substep_stats = null) {
-    const prec = 3;
-  hud.hidden = !_hudVisible;
-  if (hud.hidden) return;
-
-  if (!leaves.length) { hud.textContent = 'no leaves'; return; }
-
-  // Camera + pan window (new view exposes debugPan() = { vis, x, y })
-  const camInfo = hud_camera_info();
-  const pan = view.debugPan(); // {vis:{w,h}, x:{min,max,base,travel}, y:{...}}
-  const vis = pan.vis;
-
-  // Optional perf line
-  const substeps_line = substep_stats
-    ? `substeps (last ${N_HISTORY}): inst=${substep_stats.inst} | avg=${_numfmt(substep_stats.avg,prec)} | min=${substep_stats.min} | max=${substep_stats.max}\n`
-    : '';
-
-  // Camera position & facing dir
-  const posStr = `[${_numfmt(cam.position.x)}, ${_numfmt(cam.position.y)}, ${_numfmt(cam.position.z)}]`;
-  const dirVec = new THREE.Vector3(); cam.getWorldDirection(dirVec);
-  const dirStr = `[${_numfmt(dirVec.x)}, ${_numfmt(dirVec.y)}, ${_numfmt(dirVec.z)}]`;
-
-  // First leaf snapshot
-  const L0 = leaves[0];
-
-  hud.textContent =
-    camInfo + '\n' +
-    `cam position = ${posStr}   cam dir = ${dirStr}\n\n` +
-    `visW=${_numfmt(vis.w)}  visH=${_numfmt(vis.h)}\n` +
-    `pan.x: base=${_numfmt(pan.x.base)}  min=${_numfmt(pan.x.min)}  max=${_numfmt(pan.x.max)}  travel=${_numfmt(pan.x.travel)}\n` +
-    `pan.y: base=${_numfmt(pan.y.base)}  min=${_numfmt(pan.y.min)}  max=${_numfmt(pan.y.max)}  travel=${_numfmt(pan.y.travel)}\n` +
-    hud_quiver_info() + '\n\n' +
-    substeps_line +
-    `t = ${_numfmt(t)} s\n\n` +
-    '--- leaf 1 ---\n' +
-    `x0 = [${_numfmt(L0.x.x)}, ${_numfmt(L0.x.y)}, ${_numfmt(L0.x.z)}]\n` +
-    `v0 = [${_numfmt(L0.v.x)}, ${_numfmt(L0.v.y)}, ${_numfmt(L0.v.z)}]\n` +
-    `alpha0 = ${_numfmt(L0.alpha)}\n` +
-    `q0 = [${_numfmt(L0.q.w)}, ${_numfmt(L0.q.x)}, ${_numfmt(L0.q.y)}, ${_numfmt(L0.q.z)}]\n` +
-    `|v0| = ${_numfmt(L0.v.length())} m/s\n` +
-    `|ω0| = ${_numfmt(L0.omega.length())} rad/s\n\n` +
-    `swirls = ${air.swirls.length} / ${swirl_population_params.n_max}\n` +
-    `leaves = ${leaves.length} / ${leaf_population_params.n_max}\n`;
-}
 
 function loop(now_ms) {
     const raw_dt = Math.min(MAX_FRAME, (now_ms - prev_ms) / 1000);
@@ -535,7 +439,11 @@ function loop(now_ms) {
     const min = Math.min(...substep_history);
     const max = Math.max(...substep_history);
 
-    update_hud({ inst: steps_this_frame, avg, min, max });
+    // update_hud({ inst: steps_this_frame, avg, min, max });
+    hud.setContext({ t, substeps: { inst: steps_this_frame, avg, min, max } });
+    hud.update();
+
+    if (!view._settled) view.syncCameraToScroll(sim_params.dt);
 
     renderer.render(scene, cam);
     requestAnimationFrame(loop);

@@ -10,7 +10,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:17:56 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-20 18:22:58
+ * @Last Modified time: 2025-08-22 17:10:38
  */
 
 import * as THREE from 'three';
@@ -45,11 +45,11 @@ export class Leaf {
 
     // --- velocity ---
     // this.v [m/s]
-    this.v = (params.v instanceof THREE.Vector3) ? params.v.clone() : new THREE.Vector3(0,0,0);
+    this.v = (params.v instanceof THREE.Vector3) ? params.v.clone() : new THREE.Vector3(0, 0, 0);
 
     // --- angular velocity ---
     // this.omega [rad/s]
-    this.omega = (params.omega instanceof THREE.Vector3) ? params.omega.clone() : new THREE.Vector3(0,0,0);  // rad/s
+    this.omega = (params.omega instanceof THREE.Vector3) ? params.omega.clone() : new THREE.Vector3(0, 0, 0);  // rad/s
 
     // --- unit normal --- ()
     this.normal = _z_hat.clone().applyQuaternion(this.q);          // world unit normal
@@ -209,5 +209,12 @@ export class Leaf {
     const geom = new THREE.CircleGeometry(R, 24);
     const mat = new THREE.MeshBasicMaterial({ color: 0x66aa33, transparent: true, opacity: alpha });
     return new THREE.Mesh(geom, mat);
+  }
+
+  hud_block(ctx = {}) {
+    return `Leaf:
+  pos = [${this.x.x.toFixed(2)}, ${this.x.y.toFixed(2)}, ${this.x.z.toFixed(2)}]
+  v   = [${this.v.x.toFixed(2)}, ${this.v.y.toFixed(2)}, ${this.v.z.toFixed(2)}]
+  alpha = ${this.alpha.toFixed(2)}`;
   }
 }
