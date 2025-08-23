@@ -10,10 +10,11 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:17:56 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 17:10:38
+ * @Last Modified time: 2025-08-22 18:33:54
  */
 
 import * as THREE from 'three';
+import { randomUniformByRange } from '../util.js';
 
 const _vec = new THREE.Vector3();
 const _z_hat = new THREE.Vector3(0, 0, 1); // the assumed unit normal of the leaf mesh
@@ -120,15 +121,22 @@ export class Leaf {
     this.mesh.material.opacity = Math.max(0, Math.min(1, this.alpha));
   }
 
-  randomize_position(domain) {
+  randomize_position(domain, where = null) {
     const L = domain.L;
     const f = domain.padding_fraction;
-
-    this.x.set(
-      Math.random() * L.x,
-      Math.random() * L.y,
-      L.z + f.z * L.z * Math.random()
-    )
+    if ((where) && (where === 'top-ish')) {
+      this.x.set(
+        randomUniformByRange(0, L.x),
+        randomUniformByRange(0, L.y),
+        randomUniformByRange(0.9 * L.z, (1 + f.z) * L.z),
+      )
+    } else {
+      this.x.set(
+        randomUniformByRange(0, L.x),
+        randomUniformByRange(0, L.y),
+        randomUniformByRange(-f.z * L.z, (1 + f.z) * L.z),
+      )
+    }
   }
 
   randomize_orientation() {
@@ -143,7 +151,7 @@ export class Leaf {
     const L = domain.L
 
     // --- randomize pose like spawn() ---
-    this.randomize_position(domain)
+    this.randomize_position(domain,'top-ish')
     this.v.set(0, 0, 0);
     this.omega.set(0, 0, 0);
 

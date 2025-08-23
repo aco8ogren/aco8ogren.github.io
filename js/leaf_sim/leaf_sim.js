@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 17:47:25
+ * @Last Modified time: 2025-08-22 18:07:57
  */
 
 import * as THREE from 'three';
@@ -27,7 +27,7 @@ console.log('imports successful');
 let domain_wire = null;
 let _hudVisible = false;
 // hud
-const hud = new HudOrchestrator({ startVisible: true, precision: 3 });
+const hud = new HudOrchestrator({ startVisible: _hudVisible, precision: 3 });
 //
 
 const debug_params = {
