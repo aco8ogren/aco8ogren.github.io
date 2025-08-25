@@ -1,3 +1,9 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-08-25 13:23:54 
+ * @Last Modified by:   alex 
+ * @Last Modified time: 2025-08-25 13:23:54 
+ */
 // js/leaf_sim/quiver.js
 import * as THREE from 'three';
 

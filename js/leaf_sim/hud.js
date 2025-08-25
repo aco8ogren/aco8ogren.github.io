@@ -1,3 +1,9 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-08-25 13:23:58 
+ * @Last Modified by:   alex 
+ * @Last Modified time: 2025-08-25 13:23:58 
+ */
 // js/leaf_sim/hud.js
 import * as THREE from 'three';
 

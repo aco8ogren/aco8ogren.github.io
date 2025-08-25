@@ -3,18 +3,17 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:56
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-24 23:59:00
+ * @Last Modified time: 2025-08-25 14:57:22
  */
 
 import * as THREE from 'three';
 import { randomUniformByRange } from '../util.js';
-import { LeafModel } from './leafModel.js';
 
 const _vec = new THREE.Vector3();
 const _z_hat = new THREE.Vector3(0, 0, 1); // the assumed unit normal of the leaf mesh
 
 export class Leaf {
-  constructor(params = {}, domain = null, scene = null) {
+  constructor(params = {}, domain = null, scene = null, model = null) {
     // --- position ---
     if (params.x instanceof THREE.Vector3) {
       this.x = params.x.clone();
@@ -71,9 +70,9 @@ export class Leaf {
     this.is_alive = (params.is_alive ?? true);
 
     // --- mesh (optional) ---
-    this.mesh = null;
+    this.mesh = null; // a THREE.group of THREE.mesh
     if (scene && params.mesh !== false) {
-      this.mesh = Leaf._make_mesh(this.R, this.alpha);
+      this.mesh = Leaf._make_model(this.R, this.alpha);
       this.mesh.position.copy(this.x);
       this.mesh.quaternion.copy(this.q);
       scene.add(this.mesh);
@@ -81,13 +80,6 @@ export class Leaf {
       // --- for batch drawing (in the future) ---
       this.tile_id = -1;   // -1 = unknown/unassigned (used only by a tiled renderer)
     }
-  }
-
-  // ---------- GLB master hook ----------
-  static async prepareModel(modelUrl = './graphics/build/maple_leaf.glb') {
-    if (!Leaf._model) Leaf._model = new LeafModel(modelUrl);
-    if (!Leaf._model.ready && !Leaf._model.failed) await Leaf._model.load();
-    return Leaf._model;
   }
 
   // ---------- factories ----------
@@ -187,7 +179,7 @@ export class Leaf {
       Leaf._set_opacity(this.mesh, this.alpha);
     } else if (sceneIfNone) {
       // If headless until now, create a mesh/group now (GLB if available)
-      this.mesh = Leaf._make_mesh(this.R, this.alpha);
+      this.mesh = Leaf._make_model(this.R, this.alpha);
       sceneIfNone.add(this.mesh);
     }
 
@@ -230,11 +222,11 @@ export class Leaf {
     });
   }
 
-  static _make_mesh(R, alpha) {
-    const mdl = Leaf._model;
-    if (mdl && mdl.ready && !mdl.failed) {
+  static _make_model(R, alpha) {
+    const model = Leaf._model;
+    if (model && model.ready && !model.failed) {
       // Use GLB group
-      return mdl.instantiateLeaf({ targetRadius: R, opacity: alpha });
+      return model.instantiateLeaf({ targetRadius: R, opacity: alpha });
     }
     // Primitive fallback
     console.log('made a circle')
@@ -248,9 +240,7 @@ export class Leaf {
     return `Leaf:
   pos = [${this.x.x.toFixed(2)}, ${this.x.y.toFixed(2)}, ${this.x.z.toFixed(2)}]
   v   = [${this.v.x.toFixed(2)}, ${this.v.y.toFixed(2)}, ${this.v.z.toFixed(2)}]
-  alpha = ${this.alpha.toFixed(2)}`;
+  alpha = ${this.alpha.toFixed(2)}
+  mat = ${this.mesh.material}`;
   }
 }
-
-// Static backing for the shared GLB model
-Leaf._model = null;

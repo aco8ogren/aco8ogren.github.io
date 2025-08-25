@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 00:07:46
+ * @Last Modified time: 2025-08-25 14:57:37
  */
 
 import * as THREE from 'three';
@@ -16,13 +16,19 @@ import { View } from './view.js';
 import { Swirl, spawn_swirl } from './swirl.js';
 import { RectangularDomain, CylindricalDomain } from './domain.js';
 import { Leaf } from './leaf.js';
+import { MeshModelBank } from './mesh.js';
 import { PerLeafRenderer } from './renderer.js';
 import { QuiverRenderer } from './quiver.js';
 import { AirBackgroundSwirl } from './air.js';
 import { HudOrchestrator } from './hud.js';
 import { initCamPlot, pushCamSample } from './plot.js';
 
-await Leaf.prepareModel('./graphics/build/maple_leaf.glb');
+// load assets
+const leafModelBank = new MeshModelBank();
+await leafModelBank.prepareMany([
+    './js/leaf_sim/graphics/build/maple_leaf_1.glb',
+    './js/leaf_sim/graphics/build/maple_leaf_2.glb',
+]);
 
 console.log('imports successful');
 
@@ -201,11 +207,18 @@ hud.add(cam);
 scene.add(cam);
 
 const leafRenderer = new PerLeafRenderer({
-  modelUrl: './graphics/build/maple_leaf.glb',
-  materialOpts: { color: 0x66aa33 }, // optional
+    modelUrl: './graphics/build/maple_leaf.glb',
+    materialOpts: { color: 0x66aa33 }, // optional
 });
 hud.add(leafRenderer);
 await leafRenderer.begin(scene);
+
+// pick a fog/background color (ideally the same so the horizon “disappears”)
+// const fogColor = new THREE.Color(0x0f1218);
+// scene.background = fogColor;
+
+// // add fog: color, near, far (in world units)
+// scene.fog = new THREE.Fog(fogColor, /* near */ 1, /* far */ 150);
 
 function scrollerFor(page) {
     return (
@@ -214,18 +227,6 @@ function scrollerFor(page) {
         page.querySelector(':scope .scroller')
     );
 }
-
-// Color management (important for GLB textures/colors)
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-// Simple, good-looking light rig
-const hemi = new THREE.HemisphereLight(0xffffff, 0x101018, 1.0);
-scene.add(hemi);
-
-const key = new THREE.DirectionalLight(0xffffff, 1.2);
-key.position.set(4, 8, 6);
-scene.add(key);
-
 
 export const view = new View(renderer, cam, view_container, domain, cam_params.scope);
 hud.add(view);
@@ -333,11 +334,28 @@ function poisson(lambda) {
 }
 
 /* ------------------------------- SIM SCAFFOLD ------------------------------ */
+// 1) Minimal green, unlit material (renders with no lights)
+function makeLeafBasic(color = 0x66aa33) {
+    return new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide,   // looks good from both sides
+    });
+}
+
 function init_leaves() {
     const leaves = [];
+
     for (let i = 0; i < leaf_population_params.n_init; i += 1) {
-        // const leaf = Leaf.spawn(domain.L, leaf_params, /* scene */ null);
-        const leaf = new Leaf(leaf_params, domain, /* scene */ null)
+        const leaf = new Leaf(leaf_params, domain, /* scene */ null);
+
+        const mg = leafModelBank.get_random_model();
+        if (mg) {
+            const green = new THREE.MeshBasicMaterial({ color: 0x66aa33, side: THREE.DoubleSide });
+            const mg = leafModelBank.get_random_model();
+            const group = mg.instantiate(leaf.R, leaf.alpha, green);
+            leaf.mesh = group;
+        }
+
         leafRenderer.add_leaf(leaf);
         leaves.push(leaf);
     }
