@@ -1,9 +1,9 @@
 /*
- * @Author: alex 
- * @Date: 2025-08-22 15:34:48 
+* @Author: alex
+* @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 15:35:08
- */
+ * @Last Modified time: 2025-08-24 23:23:18
+*/
 
 <!doctype html>
 <html lang="en">
@@ -11,13 +11,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Leaf Sim – Two-Panel MWE</title>
+  <title>Leaf Sim</title>
 
   <!-- three.js import map (for later JS work) -->
   <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+        "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+        "echarts": "https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.esm.min.js"
       }
     }
   </script>
@@ -26,7 +27,6 @@
 </head>
 
 <body>
-
   <!-- Template for example text -->
   <template id="repeated-text">
     <div class="copy">
@@ -56,7 +56,7 @@
           </div>
         </header>
 
-        <div class="page-body scroller">
+        <div class="page-body scroller" id="pbs1" data-camera-scroll-source>
           <div id="copies-target-1"></div>
         </div>
       </div>
@@ -76,7 +76,7 @@
           </div>
         </header>
 
-        <div class="page-body scroller">
+        <div class="page-body scroller" id="pbs2" data-camera-scroll-source>
           <div id="copies-target-2"></div>
         </div>
       </div>
@@ -95,7 +95,7 @@
           </div>
         </header>
 
-        <div class="page-body scroller">
+        <div class="page-body scroller" id="pbs3" data-camera-scroll-source>
           <div id="copies-target-3"></div>
         </div>
       </div>
@@ -104,20 +104,11 @@
 
   </div>
 
-  <!-- Your simulation (optional, later) -->
-  <script type="module" src="./js/leaf_sim/leaf_sim.js"></script>
-
   <!-- Call the util AFTER the DOM exists; import via inline module -->
   <script type="module">
     import { copyElementNTimes } from './js/util.js';
-
-    // Page 1: copy the template 6 times into scroller-1's target
     copyElementNTimes('repeated-text', 6, 'copies-target-1');
-
-    // Page 2: also copy the same template (e.g., 3 times)
     copyElementNTimes('repeated-text', 3, 'copies-target-2');
-
-    // Page 2: also copy the same template (e.g., 3 times)
     copyElementNTimes('repeated-text', 8, 'copies-target-3');
   </script>
 </body>
@@ -154,124 +145,29 @@
   })();
 </script>
 
-<script type="module">
-  import { view } from './js/leaf_sim/leaf_sim.js';
+<script type="module" src="./js/leaf_sim/leaf_sim.js">
+  // import { view } from src;
 
-  const strip = document.getElementById('page-strip');
-  const pages = Array.from(strip.querySelectorAll('.page'));
+  // const strip = document.getElementById('page-strip');
+  // const pages = Array.from(strip.querySelectorAll('.page'));
 
-  // 0) set the horizontal scroll source once
-  view.setScrollSource({ x: strip });
-  view.syncCameraToScroll?.();
+  // function scrollerFor(page) {
+  //   return (
+  //     page.querySelector('[data-camera-scroll-source]') ||
+  //     page.querySelector(':scope .page-body.scroller') ||
+  //     page.querySelector(':scope .scroller')
+  //   );
+  // }
 
-  function scrollerFor(page) {
-    return (
-      page.querySelector('[data-camera-scroll-source]') ||
-      page.querySelector(':scope .page-body.scroller') ||
-      page.querySelector(':scope .scroller')
-    );
-  }
+  // const scrollers = pages.map(scrollerFor);
 
-  function activate(page) {
-    const el = scrollerFor(page);
-    if (el) {
-      // kwargs-style setter: pass the Y source explicitly
-      view.setScrollSource({ y: el });
-      view.syncCameraToScroll?.(); // optional: instant snap
-    }
-  }
-
-  // 1) React to horizontal paging
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      let best = null;
-      for (const e of entries) {
-        if (e.isIntersecting && (!best || e.intersectionRatio > best.intersectionRatio)) best = e;
-      }
-      if (best) activate(best.target);
-    }, { root: strip, threshold: [0.55, 0.75, 0.95] });
-    pages.forEach(p => io.observe(p));
-  }
-
-  // 2) Pre-empt on nav clicks
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="#page-"]');
-    if (!a) return;
-    const id = a.getAttribute('href').slice(1);
-    const page = document.getElementById(id);
-    if (page) activate(page);
-  });
-
-  // 3) Deep links & back/forward
-  function fromHash() {
-    const id = location.hash.slice(1);
-    const page = id ? document.getElementById(id) : pages[0];
-    if (page) activate(page);
-  }
-  window.addEventListener('hashchange', fromHash);
-  fromHash(); // initial
+  // // Set scroll sources
+  // view.setScrollSource({ x: strip, y: scrollers });
 </script>
 
+<!-- ECharts debug overlay -->
+<div class="camera-position-plot" id="cam-plot">
 
-
-<!-- <script type="module">
-  import { copyElementNTimes } from './js/util.js';
-
-  function autoWirePagesStrict() {
-    const pages = Array.from(document.querySelectorAll('#page-strip > .page'));
-
-    pages.forEach((page, idx) => {
-      const i = idx + 1;
-
-      // 1) Page id
-      page.id = `page-${i}`;
-
-      // 2) Locate required nodes (strict to your structure)
-      const shell = page.querySelector(':scope > .page-shell');
-      const header = shell?.querySelector(':scope > .page-header .center-col');
-      const nav = header?.querySelector(':scope > .nav-row');
-      const body = shell?.querySelector(':scope > .page-body.scroller');
-
-      if (!shell || !header || !nav || !body) {
-        console.warn(`autoWirePagesStrict: unexpected structure on page index ${i}`);
-        return;
-      }
-
-      // 3) Scroller id
-      body.id = `scroller-${i}`;
-
-      // 4) Copies target id (assumes first child is the target)
-      const target = body.firstElementChild;
-      if (target) {
-        target.id = `copies-target-${i}`;
-      }
-
-      // 5) Rebuild prev/next links
-      nav.innerHTML = '';
-      if (i > 1) {
-        const prev = document.createElement('a');
-        prev.className = 'nav-link';
-        prev.href = `#page-${i - 1}`;
-        prev.textContent = '← prev';
-        nav.appendChild(prev);
-      }
-      if (i < pages.length) {
-        const next = document.createElement('a');
-        next.className = 'nav-link';
-        next.href = `#page-${i + 1}`;
-        next.textContent = 'next →';
-        nav.appendChild(next);
-      }
-
-      // 6) Optional: auto-fill repeated content if section has data-copies
-      const copies = parseInt(page.dataset.copies || '0', 10);
-      if (copies > 0) {
-        copyElementNTimes('repeated-text', copies, `copies-target-${i}`);
-      }
-    });
-  }
-
-  autoWirePagesStrict();
-</script> -->
+</div>
 
 </html>

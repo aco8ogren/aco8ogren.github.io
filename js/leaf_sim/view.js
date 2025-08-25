@@ -10,10 +10,9 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:50
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 18:00:42
+ * @Last Modified time: 2025-08-23 16:16:07
  */
 import * as THREE from 'three';
-import { CylindricalDomain, RectangularDomain } from './domain.js';
 
 // view.js
 export class View {
@@ -30,7 +29,7 @@ export class View {
         this.distance = 10;               // meters (only used for scope='distance' + perspective)
 
         // Damping + settle state
-        this._damp = { lambda: 24, eps: 1e-3 };   // λ [1/s]; higher = snappier. eps = settle tolerance.
+        this._damp = { lambda: 512, eps: 1e-3 };   // λ [1/s]; higher = snappier. eps = settle tolerance.
         this._target = new THREE.Vector3(NaN, NaN, NaN);
         this._settled = true;                    // public: true when camera ≈ target
 
@@ -38,7 +37,7 @@ export class View {
         this.panDir = { x: +1, y: -1 };
 
         // scroll sources (DOM elements or window), optional per-axis
-        this.scrollEls = { x: null, y: null };
+        this.scrollEls = { x: [], y: [] };
 
         // derived: visible width/height at z = lookZ (perspective)
         this._vis = { w: 0, h: 0 };
@@ -48,6 +47,10 @@ export class View {
             x: { min: 0, max: 0, base: 0, travel: 0 },
             y: { min: 0, max: 0, base: 0, travel: 0 },
         };
+
+        // progress mode
+        this._progressModeX = 'local'; // 'local' assesses scroll progress from current scroller, 'global' assesses scroll progress from longest element - 'global' not yet implemented TODO
+        this._progressModeY = 'local'; // 'local' assesses scroll progress from current scroller, 'global' assesses scroll progress from longest element - 'global' not yet implemented TODO
 
         // bind handlers once
         this._onResize = this.fit.bind(this);
@@ -61,6 +64,7 @@ export class View {
         this.fit();
     }
 
+    // listeners
     _onScrollX = () => { this._updateTargetFromScroll(); this._settled = false; };
     _onScrollY = () => { this._updateTargetFromScroll(); this._settled = false; };
 
@@ -78,128 +82,100 @@ export class View {
         this.fit();
     }
     setPanDir({ x, y } = {}) {
-        if (x === +1 || x === -1) this.panDir.x = x;
-        if (y === +1 || y === -1) this.panDir.y = y;
-        this.syncCameraToScroll();
+        if (x === +1 || x === -1) {
+            this.panDir.x = x;
+        } else {
+            throw new Error('invalid pan direction for x')
+        }
+        if (y === +1 || y === -1) {
+            this.panDir.y = y;
+        } else {
+            throw new Error('invalid pan direction for x')
+        }
+        this._updateTargetFromScroll();
     }
     setDomain(domain) {
         this.domain = domain;
         this.fit();
     }
-
-    // kwargs-like setter: call with view.setScrollSource({ x: el }) or view.setScrollSource({ y: el })
     setScrollSource({ x = undefined, y = undefined } = {}) {
-        // detach old listeners when axis provided
-        if (x !== undefined) this._swapScrollEl('x', x);
-        if (y !== undefined) this._swapScrollEl('y', y);
-        // recompute pan windows and snap camera to current progress
+        const attachAll = (axis, arr) => {
+            // detach old
+            const old = this.scrollEls[axis];
+            if (Array.isArray(old)) {
+                const handler = axis === 'x' ? this._onScrollX : this._onScrollY;
+                for (const el of old) el?.removeEventListener?.('scroll', handler);
+            }
+            // set new (always an array)
+            const next = Array.isArray(arr) ? arr.filter(Boolean) : (arr ? [arr] : []);
+            this.scrollEls[axis] = next;
+            // attach new
+            const handler = axis === 'x' ? this._onScrollX : this._onScrollY;
+            for (const el of next) el.addEventListener('scroll', handler, { passive: true });
+        };
+
+        if (x !== undefined) attachAll('x', x);
+        if (y !== undefined) attachAll('y', y);
+
         this._recomputePanWindows();
-        this.syncCameraToScroll();
+        this._updateTargetFromScroll();
+        this._settled = false;
     }
-
-    _swapScrollEl(axis, el) {
-        const old = this.scrollEls[axis];
-        if (old) {
-            const handler = axis === 'x' ? this._onScrollX : this._onScrollY;
-            old.removeEventListener('scroll', handler);
-        }
-        this.scrollEls[axis] = el;
-        if (el) {
-            const handler = axis === 'x' ? this._onScrollX : this._onScrollY;
-            el.addEventListener('scroll', handler, { passive: true });
-        }
+    setDamping(lambda, eps = this._damp.eps) {
+        const L = Number(lambda);
+        const E = Number(eps);
+        if (Number.isFinite(L) && L > 0) this._damp.lambda = L;
+        if (Number.isFinite(E) && E >= 0) this._damp.eps = E;
+        return this;
     }
-
+    swap_camera(newCam) {
+        this.cam = newCam;
+        this.fit();
+    }
     fit() {
-        // otherwise we think a little bit
-        const w = Math.max(1, Math.floor(this.container.clientWidth)); // [px]
+        // Canvas + aspect
+        const w = Math.max(1, Math.floor(this.container.clientWidth));  // [px]
         const h = Math.max(1, Math.floor(this.container.clientHeight)); // [px]
-        const aspect = w / h; // [-]
+        const aspect = w / h;
 
-        // keep renderer + camera aspect in sync
-        if (this.renderer && this.renderer.setSize) this.renderer.setSize(w, h, false);
+        // Sync renderer + camera aspect
+        if (this.renderer?.setSize) this.renderer.setSize(w, h, false);
         if ('aspect' in this.cam) this.cam.aspect = aspect;
 
-        if (this.projection === 'perspective' && typeof this.cam.updateProjectionMatrix === 'function') {
-            this.cam.updateProjectionMatrix();
+        // Enforce simplified contract
+        if (this.scope !== 'distance') {
+            throw new Error('not yet implemented: fit() for scope != "distance"');
+        }
+        if (this.projection !== 'perspective') {
+            throw new Error('not yet implemented: fit() for non-perspective projection');
+        }
+        if (typeof this.cam.fov !== 'number' || !isFinite(this.cam.fov)) {
+            throw new Error('expected a THREE.PerspectiveCamera with numeric .fov');
         }
 
-        // --- new: scope='distance' behavior ---
-        if (this.scope === 'distance') {
-            if (this.projection !== 'perspective') {
-                console.warn('[View] scope="distance" is only defined for perspective cameras.');
-                // We’ll early-out but still try to keep camera sane.
-            }
+        // Visible extents at the look plane for given distance & FOV
+        const d = this.distance;
+        const fovRad = THREE.MathUtils.degToRad(this.cam.fov);
+        const visH = 2 * d * Math.tan(fovRad / 2);
+        const visW = visH * aspect;
+        this._vis = { w: visW, h: visH };
 
-            // Visible extents at the look plane for given distance & FOV
-            if (this.projection === 'perspective' && this.cam.fov != null) {
-                const d = this.distance;
-                const fovRad = (this.cam.fov * Math.PI) / 180;
-                const visH = 2 * d * Math.tan(fovRad / 2);
-                const visW = visH * this.cam.aspect;
-                this._vis = { w: visW, h: visH };
-            } else {
-                // Orthographic or unknown: fall back to container pixels as "vis"
-                this._vis = { w: w, h: h };
-            }
+        // Update projection + place camera on -Z side of look plane
+        if (typeof this.cam.updateProjectionMatrix === 'function') this.cam.updateProjectionMatrix();
+        this.cam.position.z = this.lookZ - d;
 
-            // place camera on -Z side of look plane
-            this.cam.position.z = this.lookZ - this.distance;
-
-            // recompute pan windows against the domain and snap to current scroll
-            this._updateTargetFromScroll
-            this._recomputePanWindows();
-            this.syncCameraToScroll();
-            return;
-        }
-
-
-
-        // Choose half-extents by mode
-        let halfW, halfH;
-        if (this.scope === 'global') {
-            if (aspect >= domain_aspect) { halfH = 0.5 * L.y; halfW = halfH * aspect; }
-            else { halfW = 0.5 * L.x; halfH = halfW / aspect; }
-            this.cam.position.y = cy; // center vertically in global
-        } else if (this.scope === 'immersive') { // immersive
-            if (aspect >= domain_aspect) { halfW = 0.5 * L.x; halfH = halfW / aspect; }
-            else { halfH = 0.5 * L.y; halfW = halfH * aspect; }
-        }
-
-        // Apply to camera
-        if (this.cam.isOrthographicCamera) {
-            this.cam.left = -halfW;
-            this.cam.right = +halfW;
-            this.cam.bottom = -halfH;
-            this.cam.top = +halfH;
-            this.cam.near = 0.01;
-            this.cam.far = 10000;
-            this.cam.updateProjectionMatrix();
-
-            this.cam.position.set(cx, this.cam.position.y, -1);
-            this.cam.lookAt(cx, this.cam.position.y, 0);
-        } else if (this.cam.isPerspectiveCamera) {
-            this.cam.aspect = aspect;
-
-            const tan = Math.tan(THREE.MathUtils.degToRad(this.cam.fov * 0.5));
-            const needH = 2 * halfH;
-            const needW = 2 * halfW;
-            const dH = needH / (2 * tan);
-            const dW = needW / (2 * tan * aspect);
-            const d = Math.max(dH, dW);
-
-            this.cam.near = 0.01;
-            this.cam.far = 10000;
-            this.cam.updateProjectionMatrix();
-
-            this.cam.position.set(cx, this.cam.position.y, -d);
-            this.cam.lookAt(cx, this.cam.position.y, 0);
-        }
-
-        // Renderer size
-        this.renderer.setSize(w, h, true);
+        // Recompute pan windows against the domain, then refresh target
+        this._recomputePanWindows();
+        this._updateTargetFromScroll();
     }
 
+
+    detach() {
+        this._ro?.disconnect?.();
+        window.removeEventListener('resize', this._onResize);
+    }
+
+    // scroll mapping helpers
     _recomputePanWindows() {
         const visW = this._vis.w;
         const visH = this._vis.h;
@@ -220,7 +196,6 @@ export class View {
             x: { min: minX, max: maxX, base: baseX, travel: travelX },
             y: { min: minY, max: maxY, base: baseY, travel: travelY },
         };
-        this._updateTargetFromScroll();
     }
 
     _progressFromEl(el, axis) {
@@ -248,19 +223,68 @@ export class View {
             return Math.min(1, Math.max(0, el.scrollLeft / max));
         }
     }
-
     _updateTargetFromScroll() {
         if (this.scope !== 'distance') return;
 
-        const px = this._pan.x.travel > 0 ? this._progressFromEl(this.scrollEls.x, 'x') : 0.5;
-        const py = this._pan.y.travel > 0 ? this._progressFromEl(this.scrollEls.y, 'y') : 0.5;
+        const clamp = (v, lo, hi) => (v < lo ? lo : (v > hi ? hi : v));
+        const lerp = (a, b, t) => a + (b - a) * t;
 
-        const camX = this._pan.x.base + this.panDir.x * (px * this._pan.x.travel);
-        const camY = this._pan.y.base + this.panDir.y * (py * this._pan.y.travel);
+        // 0..1 progress for a single element on an axis
+        const pEl = (el, axis) => this._progressFromEl(el, axis);
 
-        const Lx = this.domain?.L?.x ?? 0;
-        const Ly = this.domain?.L?.y ?? 0;
+        // Average horizontal progress (0..1) across all X scrollers.
+        // This gives us a stable horizontal "cursor" to pick neighbors for Y.
+        let posX01 = 0;
+        if (this.scrollEls.x.length) {
+            let sum = 0;
+            for (const el of this.scrollEls.x) sum += pEl(el, 'x');
+            posX01 = sum / this.scrollEls.x.length;
+        }
 
+        // Symmetric px:
+        // - if 0: px = 0
+        // - if 1: px = that element's x-progress
+        // - if >=2: find left/right neighbors by index and lerp
+        let px = 0;
+        {
+            const arr = this.scrollEls.x;
+            const n = arr.length;
+            if (n === 1) {
+                px = pEl(arr[0], 'x');
+            } else if (n >= 2) {
+                const pos = posX01 * (n - 1);          // 0..(n-1)
+                const i0 = clamp(Math.floor(pos), 0, n - 1);
+                const i1 = clamp(i0 + 1, 0, n - 1);
+                const t = i1 === i0 ? 0 : (pos - i0);
+                const p0 = pEl(arr[i0], 'x');
+                const p1 = pEl(arr[i1], 'x');
+                px = lerp(p0, p1, t);
+            } // else (n===0) px stays 0
+        }
+
+        // Symmetric py (driven by horizontal cursor posX01 for neighbor choice):
+        let py = 0;
+        {
+            const arr = this.scrollEls.y;
+            const m = arr.length;
+            if (m === 1) {
+                py = pEl(arr[0], 'y');
+            } else if (m >= 2) {
+                const pos = posX01 * (m - 1);          // 0..(m-1)
+                const j0 = clamp(Math.floor(pos), 0, m - 1);
+                const j1 = clamp(j0 + 1, 0, m - 1);
+                const t = j1 === j0 ? 0 : (pos - j0);
+                const y0 = pEl(arr[j0], 'y');
+                const y1 = pEl(arr[j1], 'y');
+                py = lerp(y0, y1, t);
+            } // else (m===0) py stays 0
+        }
+
+        // Map to camera target
+        const camX = this._pan.x.travel > 0 ? (this._pan.x.base + this.panDir.x * (px * this._pan.x.travel)) : this._pan.x.base;
+        const camY = this._pan.y.travel > 0 ? (this._pan.y.base + this.panDir.y * (py * this._pan.y.travel)) : this._pan.y.base;
+
+        const Lx = this.domain.L.x, Ly = this.domain.L.y;
         this._target.set(
             Number.isFinite(camX) ? camX : Lx * 0.5,
             Number.isFinite(camY) ? camY : Ly * 0.5,
@@ -268,8 +292,10 @@ export class View {
         );
     }
 
-
+    // runtime
     syncCameraToScroll(dtSec = 0) {
+        // this should *ONLY* ever get called in the base render loop
+        // use other functions to update camera's target position. This bad boy just instructs the camera to follow that target in a smooth way.
         if (this.scope !== 'distance') return this._settled = true;
 
         // Always refresh target from current scroll position
@@ -303,36 +329,7 @@ export class View {
     }
 
 
-    // tiny helper for HUD
-    debugPan() { return { vis: this._vis, x: this._pan.x, y: this._pan.y }; }
-
-
-
-    get_scope() { return this.scope; }
-
-    set_scope(new_scope) {
-        if (new_scope !== 'global' && new_scope !== 'immersive') {
-            throw new Error('"scope" must be "global" or "immersive"');
-        }
-        this.scope = new_scope;
-        this.fit();
-    }
-
-    set_domain(new_domain) {
-        this.domain = new_domain;
-        this.fit();
-    }
-
-    swap_camera(newCam) {
-        this.cam = newCam;
-        this.fit();
-    }
-
-    detach() {
-        this._ro?.disconnect?.();
-        window.removeEventListener('resize', this.onResize);
-    }
-
+    // debug
     hud_block(ctx = {}) {
         const prec = ctx.prec ?? 3;
         const f = (x) => Number.isFinite(x) ? x.toFixed(prec) : '—';
@@ -347,36 +344,24 @@ export class View {
         const proj = this.cam?.isOrthographicCamera ? 'orthographic' : 'perspective';
         const scope = this.scope;
 
-        // Unified visible extents (world meters) + px/m
-        let visLabel = 'vis';
-        let visW = NaN, visH = NaN;
-
-        if (this.cam?.isOrthographicCamera) {
-            // Ortho: visible size IS the frustum size in world units
-            visLabel = 'frustum';
-            visW = (this.cam.right - this.cam.left);
-            visH = (this.cam.top - this.cam.bottom);
-        } else {
-            // Perspective: visible size at the look plane (z=0 by convention)
-            visLabel = 'vis@z=0';
-            const d = Math.abs(this.cam?.position?.z ?? 0);
-            const fov = THREE.MathUtils.degToRad(this.cam?.fov ?? 40);
-            const visH_at_plane = 2 * d * Math.tan(fov * 0.5);
-            visH = visH_at_plane;
-            visW = visH * (w / Math.max(1, h));
-        }
+        // Visible extents (authoritative from View.fit)
+        const visW = this._vis?.w ?? NaN;
+        const visH = this._vis?.h ?? NaN;
+        const visLabel = this.cam?.isOrthographicCamera ? 'frustum' : 'vis@z=lookZ';
 
         const pxmX = (w && visW) ? (w / visW) : NaN;
         const pxmY = (h && visH) ? (h / visH) : NaN;
+
 
         // Camera pose
         this.cam?.getWorldDirection?.(dir);
         const pos = this.cam?.position || { x: NaN, y: NaN, z: NaN };
 
-        // Pan window (already computed by View)
-        const pan = this.debugPan?.() || { vis: { w: NaN, h: NaN }, x: {}, y: {} };
-        const panLine = (axis) =>
-            `  pan.${axis}: base=${f(pan[axis].base)}  min=${f(pan[axis].min)}  max=${f(pan[axis].max)}  travel=${f(pan[axis].travel)}`;
+        // Pan window (read directly)
+        const panX = this._pan?.x ?? { base: NaN, min: NaN, max: NaN, travel: NaN };
+        const panY = this._pan?.y ?? { base: NaN, min: NaN, max: NaN, travel: NaN };
+        const panLine = (axis, p) =>
+            `  pan.${axis}: base=${f(p.base)}  min=${f(p.min)}  max=${f(p.max)}  travel=${f(p.travel)}`;
 
         return [
             `View:`,
@@ -385,13 +370,12 @@ export class View {
             `  canvas=${w}×${h}px`,
             `  ${visLabel}=${f(visW)}×${f(visH)}m  px/m=(${f(pxmX)}, ${f(pxmY)})`,
             `  cam pos=[${f(pos.x)}, ${f(pos.y)}, ${f(pos.z)}]  dir=[${f(dir.x)}, ${f(dir.y)}, ${f(dir.z)}]`,
-            `  visW=${f(pan.vis.w)}  visH=${f(pan.vis.h)}`,
-            panLine('x'),
-            panLine('y'),
+            `  visW=${f(visW)}  visH=${f(visH)}`,
+            `  settled=${this._settled}`,
+            `  length(scrollEls.x)=${this.scrollEls.x.length}`,
+            `  length(scrollEls.y)=${this.scrollEls.y.length}`,
+            panLine('x', panX),
+            panLine('y', panY),
         ].join('\n');
     }
-
-
-
-
 }

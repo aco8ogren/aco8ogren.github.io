@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 18:07:57
+ * @Last Modified time: 2025-08-25 00:07:46
  */
 
 import * as THREE from 'three';
@@ -20,6 +20,9 @@ import { PerLeafRenderer } from './renderer.js';
 import { QuiverRenderer } from './quiver.js';
 import { AirBackgroundSwirl } from './air.js';
 import { HudOrchestrator } from './hud.js';
+import { initCamPlot, pushCamSample } from './plot.js';
+
+await Leaf.prepareModel('./graphics/build/maple_leaf.glb');
 
 console.log('imports successful');
 
@@ -34,7 +37,6 @@ const debug_params = {
     is_draw_air_velocity_2d: false,
 };
 
-const cam_z = -40;
 const L = new THREE.Vector3(180, 500, 80);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
@@ -180,9 +182,8 @@ renderer.domElement.style.position = 'absolute';
 renderer.domElement.style.inset = '0';
 view_container.appendChild(renderer.domElement);
 
-function make_camera(scope) {
-    // arguments don't matter - defaults get overwritten by attach_view anyway
-    if (scope === 'perspective') {
+function make_camera(cam_params) {
+    if (cam_params.projection === 'perspective') {
         const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 5000); // fov=40° default
         if (cam_params.scope === 'distance') {
             cam.position.set(0, 0, -cam_params.distance)
@@ -195,26 +196,61 @@ function make_camera(scope) {
 }
 
 const scene = new THREE.Scene();
-let cam = make_camera(cam_params.projection);
+let cam = make_camera(cam_params);
 hud.add(cam);
 scene.add(cam);
 
-const leafRenderer = new PerLeafRenderer();
+const leafRenderer = new PerLeafRenderer({
+  modelUrl: './graphics/build/maple_leaf.glb',
+  materialOpts: { color: 0x66aa33 }, // optional
+});
 hud.add(leafRenderer);
-leafRenderer.begin(scene);
+await leafRenderer.begin(scene);
+
+function scrollerFor(page) {
+    return (
+        page.querySelector('[data-camera-scroll-source]') ||
+        page.querySelector(':scope .page-body.scroller') ||
+        page.querySelector(':scope .scroller')
+    );
+}
+
+// Color management (important for GLB textures/colors)
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+// Simple, good-looking light rig
+const hemi = new THREE.HemisphereLight(0xffffff, 0x101018, 1.0);
+scene.add(hemi);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.2);
+key.position.set(4, 8, 6);
+scene.add(key);
+
 
 export const view = new View(renderer, cam, view_container, domain, cam_params.scope);
 hud.add(view);
 view.setScope(cam_params.scope);
 view.setProjection(cam_params.projection);
 view.setDistance(cam_params.distance);
-view.setScrollSource({
-    y: (document.scrollingElement || document.documentElement),
-    x: document.getElementById('page-strip')
-});
-view.setPanDir({ x: -1, y: -1 });
-view.syncCameraToScroll();
 
+const strip = document.getElementById('page-strip');
+const pages = Array.from(strip.querySelectorAll('.page'));
+const scrollers = pages.map(scrollerFor);
+
+view.setPanDir({ x: -1, y: -1 });
+
+// Set scroll sources
+console.log(cam.position.y)
+view.setScrollSource({ x: strip, y: scrollers });
+view._updateTargetFromScroll();
+view.cam.position.copy(view._target);
+console.log(cam.position.y)
+
+// plot
+const chart = initCamPlot('cam-plot'); // null-safe
+window.addEventListener('resize', () => chart?.resize(), { passive: true });
+
+// quiver
 const quiver = new QuiverRenderer(quiver_params);
 hud.add(quiver);
 quiver.begin(scene, domain);
@@ -222,48 +258,42 @@ quiver.setVisible(debug_params.is_draw_air_velocity_2d);
 
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-        view.syncCameraToScroll()
+        view._updateTargetFromScroll();
     }, { passive: true });
 }
 
+// hot keys
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'g') {
-        // view.set_scope('global');
-        // view.syncCameraToScroll()
+    // scope
+    if (e.key === 'g') { // global
+
         return;
     }
-    if (e.key === 'i') {
-        // view.set_scope('immersive');
-        // view.syncCameraToScroll()
+    if (e.key === 'i') { // immersive
+
+        return;
+    }
+    if (e.key === 'i') { // distance
+
         return;
     }
 
-    // Projection hotkeys (idempotent)
-    if (e.key === 'o') { // force ORTHOGRAPHIC
+    // projection
+    if (e.key === 'o') { // orthographic
         if (!cam.isOrthographicCamera) {
-            // scene.remove(cam);
-            // cam = make_camera('orthographic');
-            // scene.add(cam);
-            // view.swap_camera(cam, 'orthographic'); // if your swap_camera only takes (cam), extra arg is ignored
-            // view.syncCameraToScroll()
-            // console.log('projection → orthographic');
+
         }
         return;
     }
 
-    if (e.key === 'p') { // force PERSPECTIVE
+    if (e.key === 'p') { // perspective
         if (!cam.isPerspectiveCamera) {
-            // scene.remove(cam);
-            // cam = make_camera('perspective');
-            // scene.add(cam);
-            // view.swap_camera(cam, 'perspective');  // ok if swap_camera(cam) in your build
-            // view.syncCameraToScroll();
-            // console.log('projection → perspective');
+
         }
         return;
     }
 
-    // quiver hotkeys
+    // quiver
     if (e.key === 'h' && !e.repeat) {
         quiver.toggleHeadVisibility();
     }
@@ -313,7 +343,6 @@ function init_leaves() {
     }
     return leaves;
 }
-
 
 function step_sim() {
     t += sim_params.dt;
@@ -446,6 +475,7 @@ function loop(now_ms) {
     if (!view._settled) view.syncCameraToScroll(sim_params.dt);
 
     renderer.render(scene, cam);
+    pushCamSample(chart, t, cam.position.y);
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

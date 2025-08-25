@@ -1,20 +1,14 @@
-
 // js/leaf_sim/leaf.js
-
 /*
- * Flexible constructor:
- * - pass nothing → mostly-zero "empty" leaf (no mesh unless you pass scene)
- * - pass a partial params object to override defaults
- * If `scene` is provided (and mesh !== false), a CircleGeometry mesh is created.
- * 
- * @Author: alex 
- * @Date: 2025-08-18 14:17:56 
+ * @Author: alex
+ * @Date: 2025-08-18 14:17:56
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-22 18:33:54
+ * @Last Modified time: 2025-08-24 23:59:00
  */
 
 import * as THREE from 'three';
 import { randomUniformByRange } from '../util.js';
+import { LeafModel } from './leafModel.js';
 
 const _vec = new THREE.Vector3();
 const _z_hat = new THREE.Vector3(0, 0, 1); // the assumed unit normal of the leaf mesh
@@ -22,18 +16,16 @@ const _z_hat = new THREE.Vector3(0, 0, 1); // the assumed unit normal of the lea
 export class Leaf {
   constructor(params = {}, domain = null, scene = null) {
     // --- position ---
-    // this.x [m]
     if (params.x instanceof THREE.Vector3) {
       this.x = params.x.clone();
     } else if (domain) {
       this.x = new THREE.Vector3();
       this.randomize_position(domain); // safe no-op if null
     } else {
-      throw Error('Must supply either params.x or domain')
+      throw Error('Must supply either params.x or domain');
     }
 
     // --- orientation ---
-    // this.q [unit quaternion]
     if (params.q instanceof THREE.Quaternion) {
       this.q = params.q.clone().normalize();
     } else if (params.normal instanceof THREE.Vector3) {
@@ -45,14 +37,12 @@ export class Leaf {
     }
 
     // --- velocity ---
-    // this.v [m/s]
     this.v = (params.v instanceof THREE.Vector3) ? params.v.clone() : new THREE.Vector3(0, 0, 0);
 
     // --- angular velocity ---
-    // this.omega [rad/s]
     this.omega = (params.omega instanceof THREE.Vector3) ? params.omega.clone() : new THREE.Vector3(0, 0, 0);  // rad/s
 
-    // --- unit normal --- ()
+    // --- unit normal ---
     this.normal = _z_hat.clone().applyQuaternion(this.q);          // world unit normal
 
     // --- physical ---
@@ -93,14 +83,18 @@ export class Leaf {
     }
   }
 
-  // ---------- factories ----------
-  /** Empty placeholder (no mesh). Fill fields later as you wish. */
-  static empty() {
-    return new Leaf(); // defaults only
+  // ---------- GLB master hook ----------
+  static async prepareModel(modelUrl = './graphics/build/maple_leaf.glb') {
+    if (!Leaf._model) Leaf._model = new LeafModel(modelUrl);
+    if (!Leaf._model.ready && !Leaf._model.failed) await Leaf._model.load();
+    return Leaf._model;
   }
 
+  // ---------- factories ----------
+  /** Empty placeholder (no mesh). Fill fields later as you wish. */
+  static empty() { return new Leaf(); }
+
   // ---------- per-frame helpers ----------
-  /** Start fade-out if outside padded [0..Lx]×[0..Ly]×[0..Lz]. Return true if fully faded → cull. */
   update_alpha(dt) {
     if (this.fading_in) {
       this.alpha = Math.min(1, this.alpha + this.fade_in_speed * dt);
@@ -118,7 +112,7 @@ export class Leaf {
     if (!this.mesh) return;
     this.mesh.position.copy(this.x);
     this.mesh.quaternion.copy(this.q);
-    this.mesh.material.opacity = Math.max(0, Math.min(1, this.alpha));
+    Leaf._set_opacity(this.mesh, Math.max(0, Math.min(1, this.alpha)));
   }
 
   randomize_position(domain, where = null) {
@@ -129,29 +123,27 @@ export class Leaf {
         randomUniformByRange(0, L.x),
         randomUniformByRange(0, L.y),
         randomUniformByRange(0.9 * L.z, (1 + f.z) * L.z),
-      )
+      );
     } else {
       this.x.set(
         randomUniformByRange(0, L.x),
         randomUniformByRange(0, L.y),
         randomUniformByRange(-f.z * L.z, (1 + f.z) * L.z),
-      )
+      );
     }
   }
 
   randomize_orientation() {
-    // Orientation: rotate ẑ → random direction
     const zhat = new THREE.Vector3(0, 0, 1);
     const n0 = new THREE.Vector3().randomDirection();
     this.q.setFromUnitVectors(zhat, n0);
   }
 
   respawn(domain, params = {}, sceneIfNone = null) {
-
-    const L = domain.L
+    const L = domain.L;
 
     // --- randomize pose like spawn() ---
-    this.randomize_position(domain,'top-ish')
+    this.randomize_position(domain, 'top-ish');
     this.v.set(0, 0, 0);
     this.omega.set(0, 0, 0);
 
@@ -192,9 +184,9 @@ export class Leaf {
       const s = (Number.isFinite(newR) && newR > 0) ? (newR / oldR) : 1;
       if (s !== 1) this.mesh.scale.multiplyScalar(s);
 
-      this.mesh.material.opacity = this.alpha;
+      Leaf._set_opacity(this.mesh, this.alpha);
     } else if (sceneIfNone) {
-      // If we don’t have a mesh yet (e.g., leaf created headless), create one now.
+      // If headless until now, create a mesh/group now (GLB if available)
       this.mesh = Leaf._make_mesh(this.R, this.alpha);
       sceneIfNone.add(this.mesh);
     }
@@ -203,18 +195,51 @@ export class Leaf {
     return this;
   }
 
-  /** Remove from scene & free GPU resources. */
+  /** Remove from scene & free per-leaf GPU materials (keep shared geometry intact). */
   dispose(scene) {
     if (!this.mesh) return;
     scene.remove(this.mesh);
-    this.mesh.geometry?.dispose?.();
-    this.mesh.material?.dispose?.();
+
+    const m = this.mesh;
+    if (m.isMesh) {
+      // Only dispose geometry if it was created as a per-leaf primitive
+      if (m.geometry?.userData?._leafOwnedPrimitive) m.geometry.dispose?.();
+      m.material?.dispose?.();
+    } else {
+      m.traverse(o => { if (o.isMesh) o.material?.dispose?.(); });
+    }
     this.mesh = null;
   }
 
   // ---------- internals ----------
+  static _set_opacity(rootOrMesh, a) {
+    const alpha = Number.isFinite(a) ? Math.max(0, Math.min(1, a)) : 0;
+    if (!rootOrMesh) return;
+    if (rootOrMesh.isMesh) {
+      if (rootOrMesh.material) {
+        rootOrMesh.material.transparent = true;
+        rootOrMesh.material.opacity = alpha;
+      }
+      return;
+    }
+    rootOrMesh.traverse((o) => {
+      if (o.isMesh && o.material) {
+        o.material.transparent = true;
+        o.material.opacity = alpha;
+      }
+    });
+  }
+
   static _make_mesh(R, alpha) {
+    const mdl = Leaf._model;
+    if (mdl && mdl.ready && !mdl.failed) {
+      // Use GLB group
+      return mdl.instantiateLeaf({ targetRadius: R, opacity: alpha });
+    }
+    // Primitive fallback
+    console.log('made a circle')
     const geom = new THREE.CircleGeometry(R, 24);
+    geom.userData._leafOwnedPrimitive = true;
     const mat = new THREE.MeshBasicMaterial({ color: 0x66aa33, transparent: true, opacity: alpha });
     return new THREE.Mesh(geom, mat);
   }
@@ -226,3 +251,6 @@ export class Leaf {
   alpha = ${this.alpha.toFixed(2)}`;
   }
 }
+
+// Static backing for the shared GLB model
+Leaf._model = null;
