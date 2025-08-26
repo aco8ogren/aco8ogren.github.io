@@ -2,7 +2,7 @@
  * @Author: alex 
  * @Date: 2025-08-25 13:42:22 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 14:54:25
+ * @Last Modified time: 2025-08-25 19:40:41
  */
 // js/leaf_sim/mesh.js
 /*
@@ -159,6 +159,50 @@ export class MeshModel {
     return group;
   }
 
+  instantiate_with_material_bank(size, opacity, material_bank) {
+    if (!this.ready || this.failed) {
+      throw new Error('MeshModel not ready. Call await load() first.');
+    }
+    if (!Number.isFinite(size) || size <= 0) {
+      throw new Error('instantiate(size, opacity, material): size must be a positive number (target bounding radius).');
+    }
+    if (!Number.isFinite(opacity)) {
+      throw new Error('instantiate(size, opacity, material): opacity must be a number (0..1).');
+    }
+    if (!material_bank || !(material_bank instanceof MaterialBank)) {
+      throw new Error('instantiate(size, opacity, material): material must be a THREE.Material instance (e.g., new THREE.MeshBasicMaterial(...)).');
+    }
+
+    // Clone once per leaf so per-leaf fades/tints don’t affect other leaves.
+    const a = Math.max(0, Math.min(1, opacity));
+
+    const group = new THREE.Group();
+    group.name = `MeshModel(${this.url})`;
+
+    // Build children as shallow instances: shared geometry, shared (per-leaf) material
+    for (const rec of this._proto.meshes) {
+      const mat = material_bank.get_random_material();
+      mat.transparent = true;
+      mat.opacity = a;
+      const mesh = new THREE.Mesh(rec.geometry, mat);
+      mesh.name = rec.name;
+      mesh.frustumCulled = rec.frustumCulled ?? true;
+      mesh.castShadow = !!rec.castShadow;
+      mesh.receiveShadow = !!rec.receiveShadow;
+      mesh.matrixAutoUpdate = false;
+      mesh.matrix.copy(rec.matrix); // expect LOCAL transform captured during load()
+      group.add(mesh);
+    }
+
+    // Normalize size to requested bounding radius
+    if (this._proto.radius <= 0) {
+      throw new Error('MeshModel prototype radius is zero/invalid; cannot scale to requested size.');
+    }
+    const s = size / this._proto.radius;
+    group.scale.setScalar(s);
+
+    return group;
+  }
 
 
   /**
@@ -286,3 +330,51 @@ export class MeshModelBank {
  * const oak = DefaultMeshGeometryBank.get('oak');
  * const g = oak.instantiate({ targetRadius: 0.05, opacity: 0.9 });
  */
+
+export class MaterialBank {
+  constructor() {
+    this._materials = new Map();  // key -> THREE.Material
+  }
+
+  /** Add an existing THREE.Material under a key */
+  add(key, material) {
+    if (!(material && material.isMaterial)) {
+      throw new Error('MaterialBank.add: material must be a THREE.Material');
+    }
+    this._materials.set(key, material);
+    return material;
+  }
+
+  /** Load a material from a JSON file */
+  async loadFromFile(key, url) {
+    const resp = await fetch(url);
+    const json = await resp.json();
+    const loader = new THREE.MaterialLoader();
+    const mat = loader.parse(json);
+    this._materials.set(key, mat);
+    return mat;
+  }
+
+  get_random_material() {
+    const vals = Array.from(this._materials.values());
+    if (!vals.length) return null;
+    return vals[(Math.random() * vals.length) | 0];
+  }
+
+
+  get(key) { return this._materials.get(key) ?? null; }
+  has(key) { return this._materials.has(key); }
+  keys() { return Array.from(this._materials.keys()); }
+  values() { return Array.from(this._materials.values()); }
+  size() { return this._materials.size; }
+
+  clear(dispose = false) {
+    if (dispose) {
+      for (const mat of this._materials.values()) {
+        mat.dispose?.();
+      }
+    }
+    this._materials.clear();
+  }
+}
+
