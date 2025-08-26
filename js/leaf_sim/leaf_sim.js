@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 19:37:33
+ * @Last Modified time: 2025-08-25 20:00:04
  */
 
 import * as THREE from 'three';
@@ -334,49 +334,54 @@ function poisson(lambda) {
 }
 
 /* ------------------------------- SIM SCAFFOLD ------------------------------ */
-const leafMaterialBank = new MaterialBank();
+
+// Create an array of banks, one per color group
+const leafMaterialBanks = [
+  new MaterialBank(), // reds
+  new MaterialBank(), // oranges
+  new MaterialBank(), // yellows
+  new MaterialBank(), // browns
+  new MaterialBank(), // greens
+];
+
 // Reds
-leafMaterialBank.add('darkRed',    new THREE.MeshBasicMaterial({ color: 0x8B0000, side: THREE.DoubleSide }));
-leafMaterialBank.add('brownRed',  new THREE.MeshBasicMaterial({ color: 0xA52A2A, side: THREE.DoubleSide }));
-leafMaterialBank.add('burntUmber',new THREE.MeshBasicMaterial({ color: 0x7B3F00, side: THREE.DoubleSide }));
-leafMaterialBank.add('firebrick', new THREE.MeshBasicMaterial({ color: 0xB22222, side: THREE.DoubleSide }));
-leafMaterialBank.add('rustRed',   new THREE.MeshBasicMaterial({ color: 0x9B2C2C, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('darkRed',    new THREE.MeshBasicMaterial({ color: 0x8B0000, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('brownRed',  new THREE.MeshBasicMaterial({ color: 0xA52A2A, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('burntUmber',new THREE.MeshBasicMaterial({ color: 0x7B3F00, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('firebrick', new THREE.MeshBasicMaterial({ color: 0xB22222, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('rustRed',   new THREE.MeshBasicMaterial({ color: 0x9B2C2C, side: THREE.DoubleSide }));
 
 // Oranges
-leafMaterialBank.add('darkOrange',   new THREE.MeshBasicMaterial({ color: 0xFF8C00, side: THREE.DoubleSide }));
-leafMaterialBank.add('chocolate',    new THREE.MeshBasicMaterial({ color: 0xD2691E, side: THREE.DoubleSide }));
-leafMaterialBank.add('burntSienna',  new THREE.MeshBasicMaterial({ color: 0xE97451, side: THREE.DoubleSide }));
-leafMaterialBank.add('copper',       new THREE.MeshBasicMaterial({ color: 0xCC5500, side: THREE.DoubleSide }));
-leafMaterialBank.add('pumpkinOrange',new THREE.MeshBasicMaterial({ color: 0xFF7F50, side: THREE.DoubleSide }));
+leafMaterialBanks[1].add('darkOrange',   new THREE.MeshBasicMaterial({ color: 0xFF8C00, side: THREE.DoubleSide }));
+leafMaterialBanks[1].add('chocolate',    new THREE.MeshBasicMaterial({ color: 0xD2691E, side: THREE.DoubleSide }));
+leafMaterialBanks[1].add('burntSienna',  new THREE.MeshBasicMaterial({ color: 0xE97451, side: THREE.DoubleSide }));
+leafMaterialBanks[1].add('copper',       new THREE.MeshBasicMaterial({ color: 0xCC5500, side: THREE.DoubleSide }));
+leafMaterialBanks[1].add('pumpkinOrange',new THREE.MeshBasicMaterial({ color: 0xFF7F50, side: THREE.DoubleSide }));
 
-// Yellows / Ochres
-leafMaterialBank.add('goldenrod', new THREE.MeshBasicMaterial({ color: 0xDAA520, side: THREE.DoubleSide }));
-leafMaterialBank.add('gold',      new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide }));
-leafMaterialBank.add('sand',      new THREE.MeshBasicMaterial({ color: 0xE1A95F, side: THREE.DoubleSide }));
-leafMaterialBank.add('khaki',     new THREE.MeshBasicMaterial({ color: 0xC19A6B, side: THREE.DoubleSide }));
-leafMaterialBank.add('sandyBrown',new THREE.MeshBasicMaterial({ color: 0xF4A460, side: THREE.DoubleSide }));
+// Yellows
+leafMaterialBanks[2].add('goldenrod', new THREE.MeshBasicMaterial({ color: 0xDAA520, side: THREE.DoubleSide }));
+leafMaterialBanks[2].add('gold',      new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide }));
+leafMaterialBanks[2].add('sand',      new THREE.MeshBasicMaterial({ color: 0xE1A95F, side: THREE.DoubleSide }));
+leafMaterialBanks[2].add('khaki',     new THREE.MeshBasicMaterial({ color: 0xC19A6B, side: THREE.DoubleSide }));
+leafMaterialBanks[2].add('sandyBrown',new THREE.MeshBasicMaterial({ color: 0xF4A460, side: THREE.DoubleSide }));
 
 // Browns
-leafMaterialBank.add('darkBrown',  new THREE.MeshBasicMaterial({ color: 0x654321, side: THREE.DoubleSide }));
-leafMaterialBank.add('saddleBrown',new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide }));
-leafMaterialBank.add('coffeeBrown',new THREE.MeshBasicMaterial({ color: 0x5C4033, side: THREE.DoubleSide }));
-leafMaterialBank.add('chestnut',   new THREE.MeshBasicMaterial({ color: 0x7E481C, side: THREE.DoubleSide }));
-leafMaterialBank.add('cafeAuLait', new THREE.MeshBasicMaterial({ color: 0x6F4E37, side: THREE.DoubleSide }));
+leafMaterialBanks[3].add('darkBrown',  new THREE.MeshBasicMaterial({ color: 0x654321, side: THREE.DoubleSide }));
+leafMaterialBanks[3].add('saddleBrown',new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide }));
+leafMaterialBanks[3].add('coffeeBrown',new THREE.MeshBasicMaterial({ color: 0x5C4033, side: THREE.DoubleSide }));
+leafMaterialBanks[3].add('chestnut',   new THREE.MeshBasicMaterial({ color: 0x7E481C, side: THREE.DoubleSide }));
+leafMaterialBanks[3].add('cafeAuLait', new THREE.MeshBasicMaterial({ color: 0x6F4E37, side: THREE.DoubleSide }));
 
 // Greens
-leafMaterialBank.add('darkOlive',   new THREE.MeshBasicMaterial({ color: 0x556B2F, side: THREE.DoubleSide }));
-leafMaterialBank.add('fernGreen',   new THREE.MeshBasicMaterial({ color: 0x4F7942, side: THREE.DoubleSide }));
-leafMaterialBank.add('forestMoss',  new THREE.MeshBasicMaterial({ color: 0x2E4600, side: THREE.DoubleSide }));
-leafMaterialBank.add('darkMoss',    new THREE.MeshBasicMaterial({ color: 0x3A5311, side: THREE.DoubleSide }));
-leafMaterialBank.add('evergreen',   new THREE.MeshBasicMaterial({ color: 0x1B4D3E, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('darkOlive',   new THREE.MeshBasicMaterial({ color: 0x556B2F, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('fernGreen',   new THREE.MeshBasicMaterial({ color: 0x4F7942, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('forestMoss',  new THREE.MeshBasicMaterial({ color: 0x2E4600, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('darkMoss',    new THREE.MeshBasicMaterial({ color: 0x3A5311, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('evergreen',   new THREE.MeshBasicMaterial({ color: 0x1B4D3E, side: THREE.DoubleSide }));
 
-
-// 1) Minimal green, unlit material (renders with no lights)
-function makeLeafBasic(color = 0x66aa33) {
-    return new THREE.MeshBasicMaterial({
-        color,
-        side: THREE.DoubleSide,   // looks good from both sides
-    });
+// random integer in [0, N)  (0 up to N-1)
+function randint(N) {
+  return Math.floor(Math.random() * N);
 }
 
 function init_leaves() {
@@ -387,11 +392,7 @@ function init_leaves() {
 
         const leafModel = leafModelBank.get_random_model();
         if (leafModel) {
-            const green = new THREE.MeshBasicMaterial({ color: 0x66aa13, side: THREE.DoubleSide });
-            // const mg = leafModelBank.get_random_model();
-            // const group = leafModel.instantiate(leaf.R, leaf.alpha, green);
-            const group = leafModel.instantiate_with_material_bank(leaf.R, leaf.alpha, leafMaterialBank);
-            leaf.mesh = group;
+            leaf.mesh = leafModel.instantiate_with_material_bank(leaf.R, leaf.alpha, leafMaterialBanks[randint(leafMaterialBanks.length)]);
         }
 
         leafRenderer.add_leaf(leaf);
