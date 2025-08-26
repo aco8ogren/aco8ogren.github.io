@@ -26,8 +26,8 @@ import trimesh
 # =========================
 # 0) EDIT THESE PATHS/FLAGS
 # =========================
-INPUT_SVG = r"./graphics/svg/maple_leaf_1.svg"
-OUTPUT_PREFIX = r"./graphics/build/maple_leaf_1"  # no extension
+INPUT_SVG = r"./graphics/svg/maple_leaf_3.svg"
+OUTPUT_PREFIX = r"./graphics/build/maple_leaf_3"  # no extension
 EXPORT_OBJ = True
 EXPORT_JSON = True
 EXPORT_GLB = True

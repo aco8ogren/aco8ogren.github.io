@@ -2,7 +2,7 @@
  * @Author: alex 
  * @Date: 2025-08-25 13:42:22 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 19:40:41
+ * @Last Modified time: 2025-08-26 12:48:18
  */
 // js/leaf_sim/mesh.js
 /*
@@ -62,6 +62,9 @@ export class MeshModel {
         if (o.isMesh) {
           if (!o.geometry.boundingBox) o.geometry.computeBoundingBox?.();
           if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere?.();
+          if (!o.geometry.getAttribute('normal')) {
+            o.geometry.computeVertexNormals();
+          }
         }
       });
 
@@ -182,14 +185,9 @@ export class MeshModel {
     // Build children as shallow instances: shared geometry, shared (per-leaf) material
     for (const rec of this._proto.meshes) {
       const mat = material_bank.get_random_material();
-      mat.transparent = true;
       mat.opacity = a;
       const mesh = new THREE.Mesh(rec.geometry, mat);
       mesh.name = rec.name;
-      mesh.frustumCulled = rec.frustumCulled ?? true;
-      mesh.castShadow = !!rec.castShadow;
-      mesh.receiveShadow = !!rec.receiveShadow;
-      mesh.matrixAutoUpdate = false;
       mesh.matrix.copy(rec.matrix); // expect LOCAL transform captured during load()
       group.add(mesh);
     }
@@ -358,7 +356,7 @@ export class MaterialBank {
   get_random_material() {
     const vals = Array.from(this._materials.values());
     if (!vals.length) return null;
-    return vals[(Math.random() * vals.length) | 0];
+    return vals[(Math.random() * vals.length) | 0].clone();
   }
 
 

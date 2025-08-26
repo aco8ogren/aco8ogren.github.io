@@ -5,11 +5,14 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 20:00:04
+ * @Last Modified time: 2025-08-26 13:27:37
  */
 
 import * as THREE from 'three';
 import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass }    from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/RenderPass.js';
+import { BokehPass }     from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/BokehPass.js';
 import { compute_forces_and_moments } from './forces.js';
 import { newtons } from './integrator.js';
 import { View } from './view.js';
@@ -28,6 +31,7 @@ const leafModelBank = new MeshModelBank();
 await leafModelBank.prepareMany([
     './js/leaf_sim/graphics/build/maple_leaf_1.glb',
     './js/leaf_sim/graphics/build/maple_leaf_2.glb',
+    './js/leaf_sim/graphics/build/maple_leaf_3.glb',
 ]);
 
 console.log('imports successful');
@@ -43,7 +47,7 @@ const debug_params = {
     is_draw_air_velocity_2d: false,
 };
 
-const L = new THREE.Vector3(180, 500, 80);
+const L = new THREE.Vector3(180, 500, 160);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
 hud.add(domain);
@@ -76,7 +80,7 @@ const leaf_params = {
 
 // --- leaf population ---
 const leaf_population_params = {
-    n_init: 500,  // [-]
+    n_init: 1000,  // [-]
     n_max: NaN,   // max number of leaves
     lambda_base: 0,     // base spawn rate [leaves/sec] when there are 0 leaves
 };
@@ -215,10 +219,50 @@ await leafRenderer.begin(scene);
 
 // pick a fog/background color (ideally the same so the horizon “disappears”)
 // const fogColor = new THREE.Color(0x0f1218);
-// scene.background = fogColor;
+const fogColor = new THREE.Color(0x3B2F2F);
+// const fogColor = new THREE.Color(0x1C2230);
 
-// // add fog: color, near, far (in world units)
-// scene.fog = new THREE.Fog(fogColor, /* near */ 1, /* far */ 150);
+scene.background = fogColor;
+
+// add fog: color, near, far (in world units)
+// scene.fog = new THREE.Fog(fogColor, /* near */ 20, /* far */ 300);
+scene.fog = new THREE.FogExp2(fogColor, 0.00025);
+
+// --- Sunset directional light ---
+// color: warm orange (try #FFB266 or tweak to #FF9966 for deeper sunset)
+// intensity: ~1.2 to make it pop
+const light_color = 0xFFB266; // orange
+// const light_color = 0x332211;
+const sunLight = new THREE.DirectionalLight(light_color, .64); 
+sunLight.position.set(0.9*domain.L.x,1.1*domain.L.y,-0.5*domain.L.z);
+sunLight.target.position.set(0,0,L.z);
+scene.add(sunLight);
+scene.add(sunLight.target);
+
+scene.add(new THREE.AmbientLight(light_color, 0.96));
+
+// // --- Postprocessing: Depth of Field ---
+// const composer = new EffectComposer(renderer);
+// composer.addPass(new RenderPass(scene, cam));
+
+// // Pick an initial focus target (domain center), compute distance from camera:
+// const focusTarget = new THREE.Vector3(domain.L.x/2, domain.L.y/4, domain.L.z/2);
+// const initialFocus = cam.position.distanceTo(focusTarget);
+
+// // Bokeh DoF (tweak numbers live later)
+// const bokehPass = new BokehPass(scene, cam, {
+//   focus:    initialFocus, // world-space distance that’s sharp
+//   aperture: 0.00001,       // ~strength (try 0.0003–0.003)
+//   maxblur:  0.0075         // clamp
+// });
+// composer.addPass(bokehPass);
+
+// // (optional) quick helper to refocus on the fly:
+// function refocusTo(objOrVec3) {
+//   const p = objOrVec3.getWorldPosition ? objOrVec3.getWorldPosition(new THREE.Vector3()) : objOrVec3;
+//   bokehPass.materialBokeh.uniforms.focus.value = cam.position.distanceTo(p);
+// }
+
 
 function scrollerFor(page) {
     return (
@@ -335,49 +379,116 @@ function poisson(lambda) {
 
 /* ------------------------------- SIM SCAFFOLD ------------------------------ */
 
-// Create an array of banks, one per color group
-const leafMaterialBanks = [
-  new MaterialBank(), // reds
-  new MaterialBank(), // oranges
-  new MaterialBank(), // yellows
-  new MaterialBank(), // browns
-  new MaterialBank(), // greens
+// // Create an array of banks, one per color group
+// const leafMaterialBanks = [
+//   new MaterialBank(), // reds
+//   new MaterialBank(), // oranges
+//   new MaterialBank(), // yellows
+//   new MaterialBank(), // browns
+//   new MaterialBank(), // greens
+// ];
+
+// // Reds
+// leafMaterialBanks[0].add('darkRed',    new THREE.MeshBasicMaterial({ color: 0x8B0000, side: THREE.DoubleSide }));
+// leafMaterialBanks[0].add('brownRed',  new THREE.MeshBasicMaterial({ color: 0xA52A2A, side: THREE.DoubleSide }));
+// leafMaterialBanks[0].add('burntUmber',new THREE.MeshBasicMaterial({ color: 0x7B3F00, side: THREE.DoubleSide }));
+// leafMaterialBanks[0].add('firebrick', new THREE.MeshBasicMaterial({ color: 0xB22222, side: THREE.DoubleSide }));
+// leafMaterialBanks[0].add('rustRed',   new THREE.MeshBasicMaterial({ color: 0x9B2C2C, side: THREE.DoubleSide }));
+
+// // Oranges
+// leafMaterialBanks[1].add('darkOrange',   new THREE.MeshBasicMaterial({ color: 0xFF8C00, side: THREE.DoubleSide }));
+// leafMaterialBanks[1].add('chocolate',    new THREE.MeshBasicMaterial({ color: 0xD2691E, side: THREE.DoubleSide }));
+// leafMaterialBanks[1].add('burntSienna',  new THREE.MeshBasicMaterial({ color: 0xE97451, side: THREE.DoubleSide }));
+// leafMaterialBanks[1].add('copper',       new THREE.MeshBasicMaterial({ color: 0xCC5500, side: THREE.DoubleSide }));
+// leafMaterialBanks[1].add('pumpkinOrange',new THREE.MeshBasicMaterial({ color: 0xFF7F50, side: THREE.DoubleSide }));
+
+// // Yellows
+// leafMaterialBanks[2].add('goldenrod', new THREE.MeshBasicMaterial({ color: 0xDAA520, side: THREE.DoubleSide }));
+// leafMaterialBanks[2].add('gold',      new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide }));
+// leafMaterialBanks[2].add('sand',      new THREE.MeshBasicMaterial({ color: 0xE1A95F, side: THREE.DoubleSide }));
+// leafMaterialBanks[2].add('khaki',     new THREE.MeshBasicMaterial({ color: 0xC19A6B, side: THREE.DoubleSide }));
+// leafMaterialBanks[2].add('sandyBrown',new THREE.MeshBasicMaterial({ color: 0xF4A460, side: THREE.DoubleSide }));
+
+// // Browns
+// leafMaterialBanks[3].add('darkBrown',  new THREE.MeshBasicMaterial({ color: 0x654321, side: THREE.DoubleSide }));
+// leafMaterialBanks[3].add('saddleBrown',new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide }));
+// leafMaterialBanks[3].add('coffeeBrown',new THREE.MeshBasicMaterial({ color: 0x5C4033, side: THREE.DoubleSide }));
+// leafMaterialBanks[3].add('chestnut',   new THREE.MeshBasicMaterial({ color: 0x7E481C, side: THREE.DoubleSide }));
+// leafMaterialBanks[3].add('cafeAuLait', new THREE.MeshBasicMaterial({ color: 0x6F4E37, side: THREE.DoubleSide }));
+
+// // Greens
+// leafMaterialBanks[4].add('darkOlive',   new THREE.MeshBasicMaterial({ color: 0x556B2F, side: THREE.DoubleSide }));
+// leafMaterialBanks[4].add('fernGreen',   new THREE.MeshBasicMaterial({ color: 0x4F7942, side: THREE.DoubleSide }));
+// leafMaterialBanks[4].add('forestMoss',  new THREE.MeshBasicMaterial({ color: 0x2E4600, side: THREE.DoubleSide }));
+// leafMaterialBanks[4].add('darkMoss',    new THREE.MeshBasicMaterial({ color: 0x3A5311, side: THREE.DoubleSide }));
+// leafMaterialBanks[4].add('evergreen',   new THREE.MeshBasicMaterial({ color: 0x1B4D3E, side: THREE.DoubleSide }));
+
+
+// One bank per color family: [reds, oranges, yellows, browns, greens]
+export const leafMaterialBanks = [
+  new MaterialBank(), // 0 reds
+  new MaterialBank(), // 1 oranges
+  new MaterialBank(), // 2 yellows
+  new MaterialBank(), // 3 browns
+  new MaterialBank(), // 4 greens
 ];
 
+// Small helper to keep material options consistent
+const std = (hex, rough = 0.9) =>
+  new THREE.MeshStandardMaterial({
+    color: hex,
+    metalness: 0.0,
+    roughness: rough,
+    transparent: true,        // you fade leaves
+    side: THREE.DoubleSide,
+    depthWrite: false         // helps with many transparent leaves
+  });
+
+// // Helper: consistent lambert options for thin, transparent leaves
+// const std = (hex) => new THREE.MeshLambertMaterial({
+//   color: hex,
+//   transparent: true,      // you fade leaves in/out
+//   side: THREE.DoubleSide, // visible both sides
+//   depthWrite: false       // reduces over-dark stacking with many transparents
+// });
+
+
+
 // Reds
-leafMaterialBanks[0].add('darkRed',    new THREE.MeshBasicMaterial({ color: 0x8B0000, side: THREE.DoubleSide }));
-leafMaterialBanks[0].add('brownRed',  new THREE.MeshBasicMaterial({ color: 0xA52A2A, side: THREE.DoubleSide }));
-leafMaterialBanks[0].add('burntUmber',new THREE.MeshBasicMaterial({ color: 0x7B3F00, side: THREE.DoubleSide }));
-leafMaterialBanks[0].add('firebrick', new THREE.MeshBasicMaterial({ color: 0xB22222, side: THREE.DoubleSide }));
-leafMaterialBanks[0].add('rustRed',   new THREE.MeshBasicMaterial({ color: 0x9B2C2C, side: THREE.DoubleSide }));
+leafMaterialBanks[0].add('darkRed',     std(0x8B0000));
+leafMaterialBanks[0].add('brownRed',    std(0xA52A2A));
+leafMaterialBanks[0].add('burntUmber',  std(0x7B3F00));
+leafMaterialBanks[0].add('firebrick',   std(0xB22222));
+leafMaterialBanks[0].add('rustRed',     std(0x9B2C2C));
 
-// Oranges
-leafMaterialBanks[1].add('darkOrange',   new THREE.MeshBasicMaterial({ color: 0xFF8C00, side: THREE.DoubleSide }));
-leafMaterialBanks[1].add('chocolate',    new THREE.MeshBasicMaterial({ color: 0xD2691E, side: THREE.DoubleSide }));
-leafMaterialBanks[1].add('burntSienna',  new THREE.MeshBasicMaterial({ color: 0xE97451, side: THREE.DoubleSide }));
-leafMaterialBanks[1].add('copper',       new THREE.MeshBasicMaterial({ color: 0xCC5500, side: THREE.DoubleSide }));
-leafMaterialBanks[1].add('pumpkinOrange',new THREE.MeshBasicMaterial({ color: 0xFF7F50, side: THREE.DoubleSide }));
+// Oranges (a touch less rough = tiny bit more sheen)
+leafMaterialBanks[1].add('darkOrange',    std(0xFF8C00, 0.85));
+leafMaterialBanks[1].add('chocolate',     std(0xD2691E, 0.85));
+leafMaterialBanks[1].add('burntSienna',   std(0xE97451, 0.85));
+leafMaterialBanks[1].add('copper',        std(0xCC5500, 0.85));
+leafMaterialBanks[1].add('pumpkinOrange', std(0xFF7F50, 0.85));
 
-// Yellows
-leafMaterialBanks[2].add('goldenrod', new THREE.MeshBasicMaterial({ color: 0xDAA520, side: THREE.DoubleSide }));
-leafMaterialBanks[2].add('gold',      new THREE.MeshBasicMaterial({ color: 0xFFD700, side: THREE.DoubleSide }));
-leafMaterialBanks[2].add('sand',      new THREE.MeshBasicMaterial({ color: 0xE1A95F, side: THREE.DoubleSide }));
-leafMaterialBanks[2].add('khaki',     new THREE.MeshBasicMaterial({ color: 0xC19A6B, side: THREE.DoubleSide }));
-leafMaterialBanks[2].add('sandyBrown',new THREE.MeshBasicMaterial({ color: 0xF4A460, side: THREE.DoubleSide }));
+// Yellows (slightly shinier)
+leafMaterialBanks[2].add('goldenrod',  std(0xDAA520, 0.8));
+leafMaterialBanks[2].add('gold',       std(0xFFD700, 0.8));
+leafMaterialBanks[2].add('sand',       std(0xE1A95F, 0.8));
+leafMaterialBanks[2].add('khaki',      std(0xC19A6B, 0.8));
+leafMaterialBanks[2].add('sandyBrown', std(0xF4A460, 0.8));
 
-// Browns
-leafMaterialBanks[3].add('darkBrown',  new THREE.MeshBasicMaterial({ color: 0x654321, side: THREE.DoubleSide }));
-leafMaterialBanks[3].add('saddleBrown',new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide }));
-leafMaterialBanks[3].add('coffeeBrown',new THREE.MeshBasicMaterial({ color: 0x5C4033, side: THREE.DoubleSide }));
-leafMaterialBanks[3].add('chestnut',   new THREE.MeshBasicMaterial({ color: 0x7E481C, side: THREE.DoubleSide }));
-leafMaterialBanks[3].add('cafeAuLait', new THREE.MeshBasicMaterial({ color: 0x6F4E37, side: THREE.DoubleSide }));
+// Browns (more matte)
+leafMaterialBanks[3].add('darkBrown',   std(0x654321, 0.95));
+leafMaterialBanks[3].add('saddleBrown', std(0x8B4513, 0.95));
+leafMaterialBanks[3].add('coffeeBrown', std(0x5C4033, 0.95));
+leafMaterialBanks[3].add('chestnut',    std(0x7E481C, 0.95));
+leafMaterialBanks[3].add('cafeAuLait',  std(0x6F4E37, 0.95));
 
 // Greens
-leafMaterialBanks[4].add('darkOlive',   new THREE.MeshBasicMaterial({ color: 0x556B2F, side: THREE.DoubleSide }));
-leafMaterialBanks[4].add('fernGreen',   new THREE.MeshBasicMaterial({ color: 0x4F7942, side: THREE.DoubleSide }));
-leafMaterialBanks[4].add('forestMoss',  new THREE.MeshBasicMaterial({ color: 0x2E4600, side: THREE.DoubleSide }));
-leafMaterialBanks[4].add('darkMoss',    new THREE.MeshBasicMaterial({ color: 0x3A5311, side: THREE.DoubleSide }));
-leafMaterialBanks[4].add('evergreen',   new THREE.MeshBasicMaterial({ color: 0x1B4D3E, side: THREE.DoubleSide }));
+leafMaterialBanks[4].add('darkOlive',  std(0x556B2F, 0.9));
+leafMaterialBanks[4].add('fernGreen',  std(0x4F7942, 0.9));
+leafMaterialBanks[4].add('forestMoss', std(0x2E4600, 0.9));
+leafMaterialBanks[4].add('darkMoss',   std(0x3A5311, 0.9));
+leafMaterialBanks[4].add('evergreen',  std(0x1B4D3E, 0.9));
+
 
 // random integer in [0, N)  (0 up to N-1)
 function randint(N) {
@@ -532,6 +643,7 @@ function loop(now_ms) {
     if (!view._settled) view.syncCameraToScroll(sim_params.dt);
 
     renderer.render(scene, cam);
+    // composer.render();
     pushCamSample(chart, t, cam.position.y);
     requestAnimationFrame(loop);
 }
