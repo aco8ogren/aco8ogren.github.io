@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-26 13:27:37
+ * @Last Modified time: 2025-08-26 16:07:13
  */
 
 import * as THREE from 'three';
@@ -47,7 +47,7 @@ const debug_params = {
     is_draw_air_velocity_2d: false,
 };
 
-const L = new THREE.Vector3(180, 500, 160);
+const L = new THREE.Vector3(180, 500, 80);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
 hud.add(domain);
@@ -80,7 +80,7 @@ const leaf_params = {
 
 // --- leaf population ---
 const leaf_population_params = {
-    n_init: 1000,  // [-]
+    n_init: 500,  // [-]
     n_max: NaN,   // max number of leaves
     lambda_base: 0,     // base spawn rate [leaves/sec] when there are 0 leaves
 };

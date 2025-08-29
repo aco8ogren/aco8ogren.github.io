@@ -2,7 +2,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 12:13:30
+ * @Last Modified time: 2025-08-29 11:13:58
 */
 
 <!doctype html>
@@ -40,15 +40,17 @@
     </div>
   </template>
 
-  <!-- Horizontal strip with two pages -->
-  <div id="page-strip" aria-label="horizontal pages">
+  <!-- Horizontal strip with three pages -->
+  <div id="page-strip">
 
     <!-- ========== PAGE 1 ========== -->
     <section class="page" id="page-1">
       <div class="page-shell">
         <header class="page-header">
           <div class="center-col">
-            <h1>falling leaves — page 1</h1>
+            <h1>Alex Ogren</h1>
+            <a href="https://www.github.com/aco8ogren" class="nav-link">my github</a>
+            <a href="#page-3" class="nav-link">CV</a>
             <nav class="nav-row">
               <!-- first page -->
               <a href="#page-2" class="nav-link next">next →</a>
@@ -57,7 +59,18 @@
         </header>
 
         <div class="page-body scroller" id="pbs1" data-camera-scroll-source>
-          <div id="copies-target-1"></div>
+          <div class="container" style="display: flex; justify-content: center;">
+            <img src="graphics/rollerblading_new.png" style="width: 80%">
+          </div style>
+
+
+          <p style="text-align: justify">I'm a math-minded engineer who enjoys building things, both abstract and real, especially when the project
+            involves learning something new. On this site you will find information about my talents, projects,
+            education, interests, and more.</p>
+          <h4>Education</h4>
+          <p>I grew up in the Twin Cities of Minnesota, went to undergrad at University of Wisconsin - Madison (B.S.
+            Engineering Mechanics + B.S. Applied Math), and scooped up a PhD from Caltech.</p>
+          <div class="spacer"></div>
         </div>
       </div>
     </section>
@@ -166,7 +179,7 @@
 </script>
 
 <!-- ECharts debug overlay -->
-<div class="camera-position-plot" id="cam-plot">
+<div class="camera-position-plot" id="cam-plot" style="display: none">
 
 </div>
 
