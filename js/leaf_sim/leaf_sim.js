@@ -5,26 +5,26 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-26 16:07:13
+ * @Last Modified time: 2025-09-02 17:56:18
  */
 
 import * as THREE from 'three';
-import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass }    from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/RenderPass.js';
-import { BokehPass }     from 'https://unpkg.com/three@0.161.0/examples/jsm/postprocessing/BokehPass.js';
-import { compute_forces_and_moments } from './forces.js';
-import { newtons } from './integrator.js';
-import { View } from './view.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { compute_forces_and_moments } from '/js/leaf_sim/forces.js';
+import { newtons } from '/js/leaf_sim/integrator.js';
+import { View } from '/js/leaf_sim/view.js';
 import { Swirl, spawn_swirl } from './swirl.js';
-import { RectangularDomain, CylindricalDomain } from './domain.js';
+import { RectangularDomain, CylindricalDomain } from '/js/leaf_sim/domain.js';
 import { Leaf } from './leaf.js';
-import { MeshModelBank, MaterialBank } from './mesh.js';
-import { PerLeafRenderer } from './renderer.js';
-import { QuiverRenderer } from './quiver.js';
-import { AirBackgroundSwirl } from './air.js';
-import { HudOrchestrator } from './hud.js';
-import { initCamPlot, pushCamSample } from './plot.js';
+import { MeshModelBank, MaterialBank } from '/js/leaf_sim/mesh.js';
+import { PerLeafRenderer } from '/js/leaf_sim/renderer.js';
+import { QuiverRenderer } from '/js/leaf_sim/quiver.js';
+import { AirBackgroundSwirl } from '/js/leaf_sim/air.js';
+import { HudOrchestrator } from '/js/leaf_sim/hud.js';
+import { initCamPlot, pushCamSample } from '/js/leaf_sim/plot.js';
 
 // load assets
 const leafModelBank = new MeshModelBank();

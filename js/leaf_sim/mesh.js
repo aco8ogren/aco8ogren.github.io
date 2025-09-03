@@ -1,8 +1,8 @@
-/*
+ /*
  * @Author: alex 
  * @Date: 2025-08-25 13:42:22 
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-26 12:48:18
+ * @Last Modified time: 2025-09-02 17:58:47
  */
 // js/leaf_sim/mesh.js
 /*
@@ -15,7 +15,7 @@
  */
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 /**
  * One GLB-backed mesh asset.
