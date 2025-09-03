@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 14:16:26
+ * @Last Modified time: 2025-09-03 14:46:31
  */
 
 import * as THREE from 'three';
@@ -40,7 +40,7 @@ console.log('imports successful');
 let domain_wire = null;
 let _domainWireVisible = false;
 let _hudVisible = false;
-let _chartVisible = true;
+let _chartVisible = false;
 let _quiverVisible = false;
 
 // hud
@@ -115,7 +115,7 @@ const swirl_population_params = {
 const cam_params = {
     projection: 'perspective', // 'orthographic', 'perspective'
     scope: 'distance', // 'global', 'immersive', 'distance'. scope = 'distance' may only be used with projection = 'perspective'
-    distance: 10, // [m], only relevant for scope = 'distance'. The distance from the camera to the edge of the scene, supplied as a positive value.
+    distance: 12, // [m], only relevant for scope = 'distance'. The distance from the camera to the edge of the scene, supplied as a positive value.
 }
 
 if ((cam_params.scope === 'distance') && (cam_params.projection === 'orthographic')) {
