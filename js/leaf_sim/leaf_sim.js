@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 13:02:54
+ * @Last Modified time: 2025-09-03 13:41:39
  */
 
 import * as THREE from 'three';
@@ -24,7 +24,7 @@ import { PerLeafRenderer } from '/js/leaf_sim/renderer.js';
 import { QuiverRenderer } from '/js/leaf_sim/quiver.js';
 import { AirBackgroundSwirl } from '/js/leaf_sim/air.js';
 import { HudOrchestrator } from '/js/leaf_sim/hud.js';
-import { initCamPlot, pushCamSample } from '/js/leaf_sim/plot.js';
+import { initCamYPositionPlot, pushCamYPositionSample } from '/js/leaf_sim/plot.js';
 
 // load assets
 const leafModelBank = new MeshModelBank();
@@ -38,16 +38,15 @@ console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
 let domain_wire = null;
-let _hudVisible = true;
+let _hudVisible = false;
+let _chartVisible = false;
+let _quiverVisible = false;
+
 // hud
 const hud = new HudOrchestrator({ startVisible: _hudVisible, precision: 3 });
 //
 
-const debug_params = {
-    is_draw_air_velocity_2d: false,
-};
-
-const L = new THREE.Vector3(180, 500, 80);
+const L = new THREE.Vector3(180, 250, 80);
 const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
 const domain = new RectangularDomain(L, domain_padding_frac);
 hud.add(domain);
@@ -115,7 +114,7 @@ const swirl_population_params = {
 const cam_params = {
     projection: 'perspective', // 'orthographic', 'perspective'
     scope: 'distance', // 'global', 'immersive', 'distance'. scope = 'distance' may only be used with projection = 'perspective'
-    distance: 40, // [m], only relevant for scope = 'distance'. The distance from the camera to the edge of the scene, supplied as a positive value.
+    distance: 10, // [m], only relevant for scope = 'distance'. The distance from the camera to the edge of the scene, supplied as a positive value.
 }
 
 if ((cam_params.scope === 'distance') && (cam_params.projection === 'orthographic')) {
@@ -143,8 +142,8 @@ air.setBackground(v_air_background);
 
 // --- quiver (air-velocity debug overlay) ---
 const quiver_params = {
-    nx: 60,                // grid columns
-    ny: 512,                // grid rows
+    nx: 120,                // grid columns
+    ny: 256,                // grid rows
     nz: 1,                 // grid slices in z (set >1 in the future for 3D quiver)
     z_slice: domain.L.z / 2,            // z-plane for nz=1
     scale: 0.05,            // meters per (m/s) displayed
@@ -154,7 +153,7 @@ const quiver_params = {
     head_ratio: 0.25,    // head length as fraction of total arrow length
     color: 0x6ad1ff,
     alpha: 0.4,
-    update_every_n_frames: 2, // only update quivers every n frames
+    update_every_n_frames: 2, // NOT IMPLEMENTED YET; only update quivers every n frames
 };
 
 let quiver_inst = null;    // { shaft: InstancedMesh, head: InstancedMesh, count }
@@ -293,14 +292,16 @@ view.cam.position.copy(view._target);
 console.log(cam.position.y)
 
 // plot
-const chart = initCamPlot('cam-plot'); // null-safe
+const YPositionPlotEl = document.getElementById('cam-plot');
+if (YPositionPlotEl && !_chartVisible) YPositionPlotEl.style.display = 'none';
+const chart = initCamYPositionPlot('cam-plot'); // null-safe
 window.addEventListener('resize', () => chart?.resize(), { passive: true });
 
 // quiver
 const quiver = new QuiverRenderer(quiver_params);
 hud.add(quiver);
 quiver.begin(scene, domain);
-quiver.setVisible(debug_params.is_draw_air_velocity_2d);
+quiver.setVisible(_quiverVisible);
 
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
@@ -645,7 +646,7 @@ function loop(now_ms) {
 
     renderer.render(scene, cam);
     // composer.render();
-    pushCamSample(chart, t, cam.position.y);
+    pushCamYPositionSample(chart, t, cam.position.y);
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

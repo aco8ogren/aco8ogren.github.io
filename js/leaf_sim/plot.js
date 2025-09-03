@@ -2,10 +2,10 @@
 import * as echarts from 'echarts';
 
 // init a simple time→value line chart; CSS sets size/position of #cam-plot
-export function initCamPlot(domId = 'cam-plot') {
+export function initCamYPositionPlot(domId = 'cam-plot') {
   const el = document.getElementById(domId);
   if (!el) { console.warn(`[cam plot] #${domId} not found`); return null; }
-
+  
   const chart = echarts.init(el, null, { renderer: 'canvas', useDirtyRect: true });
   chart.setOption({
     backgroundColor: 'transparent',
@@ -20,7 +20,7 @@ export function initCamPlot(domId = 'cam-plot') {
 }
 
 // push one sample per frame; keep a rolling window (default ~10s @120fps)
-export function pushCamSample(chart, t, y, maxN = 1200) {
+export function pushCamYPositionSample(chart, t, y, maxN = 1200) {
   if (!chart) return;
   const opt = chart.getOption();
   const data = opt.series[0].data;
