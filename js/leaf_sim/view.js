@@ -10,7 +10,7 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:50
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-23 16:16:07
+ * @Last Modified time: 2025-09-03 13:02:24
  */
 import * as THREE from 'three';
 
@@ -73,8 +73,8 @@ export class View {
         this.scope = scope;
         this.fit();
     }
-    setProjection(p) {
-        this.projection = p;
+    setProjection(projection) {
+        this.projection = projection;
         this.fit();
     }
     setDistance(dMeters) {

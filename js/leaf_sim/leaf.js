@@ -3,7 +3,7 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:56
  * @Last Modified by: alex
- * @Last Modified time: 2025-08-25 14:57:22
+ * @Last Modified time: 2025-09-03 12:51:42
  */
 
 import * as THREE from 'three';
@@ -229,7 +229,7 @@ export class Leaf {
       return model.instantiateLeaf({ targetRadius: R, opacity: alpha });
     }
     // Primitive fallback
-    console.log('made a circle')
+    // console.log('made a circle')
     const geom = new THREE.CircleGeometry(R, 24);
     geom.userData._leafOwnedPrimitive = true;
     const mat = new THREE.MeshBasicMaterial({ color: 0x66aa33, transparent: true, opacity: alpha });
