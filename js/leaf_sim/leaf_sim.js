@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 13:41:39
+ * @Last Modified time: 2025-09-03 14:16:26
  */
 
 import * as THREE from 'three';
@@ -24,7 +24,7 @@ import { PerLeafRenderer } from '/js/leaf_sim/renderer.js';
 import { QuiverRenderer } from '/js/leaf_sim/quiver.js';
 import { AirBackgroundSwirl } from '/js/leaf_sim/air.js';
 import { HudOrchestrator } from '/js/leaf_sim/hud.js';
-import { initCamYPositionPlot, pushCamYPositionSample } from '/js/leaf_sim/plot.js';
+import { initCamYPositionPlot, pushCamYPositionSample, initLeafDensityPlot, updateLeafDensityPlot } from '/js/leaf_sim/plot.js';
 
 // load assets
 const leafModelBank = new MeshModelBank();
@@ -38,8 +38,9 @@ console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
 let domain_wire = null;
+let _domainWireVisible = false;
 let _hudVisible = false;
-let _chartVisible = false;
+let _chartVisible = true;
 let _quiverVisible = false;
 
 // hud
@@ -47,7 +48,7 @@ const hud = new HudOrchestrator({ startVisible: _hudVisible, precision: 3 });
 //
 
 const L = new THREE.Vector3(180, 250, 80);
-const domain_padding_frac = new THREE.Vector3(0.1, 0.1, 0.1);
+const domain_padding_frac = new THREE.Vector3(0.4, 0.2, 0.2);
 const domain = new RectangularDomain(L, domain_padding_frac);
 hud.add(domain);
 
@@ -232,9 +233,9 @@ scene.fog = new THREE.FogExp2(fogColor, 0.00025);
 // intensity: ~1.2 to make it pop
 const light_color = 0xFFB266; // orange
 // const light_color = 0x332211;
-const sunLight = new THREE.DirectionalLight(light_color, .64); 
-sunLight.position.set(0.9*domain.L.x,1.1*domain.L.y,-0.5*domain.L.z);
-sunLight.target.position.set(0,0,L.z);
+const sunLight = new THREE.DirectionalLight(light_color, .64);
+sunLight.position.set(0.9 * domain.L.x, 1.1 * domain.L.y, -0.5 * domain.L.z);
+sunLight.target.position.set(0, 0, L.z);
 scene.add(sunLight);
 scene.add(sunLight.target);
 
@@ -276,7 +277,7 @@ hud.add(view);
 view.setScope(cam_params.scope);
 view.setProjection(cam_params.projection);
 view.setDistance(cam_params.distance);
-view.setProgressMode({x: 'local', y: 'global'})
+view.setProgressMode({ x: 'local', y: 'global' })
 
 const strip = document.getElementById('page-strip');
 const pages = Array.from(strip.querySelectorAll('.page'));
@@ -295,7 +296,18 @@ console.log(cam.position.y)
 const YPositionPlotEl = document.getElementById('cam-plot');
 if (YPositionPlotEl && !_chartVisible) YPositionPlotEl.style.display = 'none';
 const chart = initCamYPositionPlot('cam-plot'); // null-safe
-window.addEventListener('resize', () => chart?.resize(), { passive: true });
+
+const DensityPlotEl = document.getElementById('density-plot');
+const w = DensityPlotEl.getBoundingClientRect().width; // or el.clientWidth
+const h = Math.round(w * (domain.L.y / domain.L.x));
+DensityPlotEl.style.height = h + 'px';
+if (DensityPlotEl && !_chartVisible) DensityPlotEl.style.display = 'none';
+const densityChart = initLeafDensityPlot('density-plot', /* nx */ 32, /* ny */ Math.round(32 * domain.L.y / domain.L.x), domain);
+
+window.addEventListener('resize', () => {
+    chart?.resize();
+    densityChart?.resize();
+}, { passive: true });
 
 // quiver
 const quiver = new QuiverRenderer(quiver_params);
@@ -428,23 +440,23 @@ function poisson(lambda) {
 
 // One bank per color family: [reds, oranges, yellows, browns, greens]
 export const leafMaterialBanks = [
-  new MaterialBank(), // 0 reds
-  new MaterialBank(), // 1 oranges
-  new MaterialBank(), // 2 yellows
-  new MaterialBank(), // 3 browns
-  new MaterialBank(), // 4 greens
+    new MaterialBank(), // 0 reds
+    new MaterialBank(), // 1 oranges
+    new MaterialBank(), // 2 yellows
+    new MaterialBank(), // 3 browns
+    new MaterialBank(), // 4 greens
 ];
 
 // Small helper to keep material options consistent
 const std = (hex, rough = 0.9) =>
-  new THREE.MeshStandardMaterial({
-    color: hex,
-    metalness: 0.0,
-    roughness: rough,
-    transparent: true,        // you fade leaves
-    side: THREE.DoubleSide,
-    depthWrite: false         // helps with many transparent leaves
-  });
+    new THREE.MeshStandardMaterial({
+        color: hex,
+        metalness: 0.0,
+        roughness: rough,
+        transparent: true,        // you fade leaves
+        side: THREE.DoubleSide,
+        depthWrite: false         // helps with many transparent leaves
+    });
 
 // // Helper: consistent lambert options for thin, transparent leaves
 // const std = (hex) => new THREE.MeshLambertMaterial({
@@ -457,44 +469,44 @@ const std = (hex, rough = 0.9) =>
 
 
 // Reds
-leafMaterialBanks[0].add('darkRed',     std(0x8B0000));
-leafMaterialBanks[0].add('brownRed',    std(0xA52A2A));
-leafMaterialBanks[0].add('burntUmber',  std(0x7B3F00));
-leafMaterialBanks[0].add('firebrick',   std(0xB22222));
-leafMaterialBanks[0].add('rustRed',     std(0x9B2C2C));
+leafMaterialBanks[0].add('darkRed', std(0x8B0000));
+leafMaterialBanks[0].add('brownRed', std(0xA52A2A));
+leafMaterialBanks[0].add('burntUmber', std(0x7B3F00));
+leafMaterialBanks[0].add('firebrick', std(0xB22222));
+leafMaterialBanks[0].add('rustRed', std(0x9B2C2C));
 
 // Oranges (a touch less rough = tiny bit more sheen)
-leafMaterialBanks[1].add('darkOrange',    std(0xFF8C00, 0.85));
-leafMaterialBanks[1].add('chocolate',     std(0xD2691E, 0.85));
-leafMaterialBanks[1].add('burntSienna',   std(0xE97451, 0.85));
-leafMaterialBanks[1].add('copper',        std(0xCC5500, 0.85));
+leafMaterialBanks[1].add('darkOrange', std(0xFF8C00, 0.85));
+leafMaterialBanks[1].add('chocolate', std(0xD2691E, 0.85));
+leafMaterialBanks[1].add('burntSienna', std(0xE97451, 0.85));
+leafMaterialBanks[1].add('copper', std(0xCC5500, 0.85));
 leafMaterialBanks[1].add('pumpkinOrange', std(0xFF7F50, 0.85));
 
 // Yellows (slightly shinier)
-leafMaterialBanks[2].add('goldenrod',  std(0xDAA520, 0.8));
-leafMaterialBanks[2].add('gold',       std(0xFFD700, 0.8));
-leafMaterialBanks[2].add('sand',       std(0xE1A95F, 0.8));
-leafMaterialBanks[2].add('khaki',      std(0xC19A6B, 0.8));
+leafMaterialBanks[2].add('goldenrod', std(0xDAA520, 0.8));
+leafMaterialBanks[2].add('gold', std(0xFFD700, 0.8));
+leafMaterialBanks[2].add('sand', std(0xE1A95F, 0.8));
+leafMaterialBanks[2].add('khaki', std(0xC19A6B, 0.8));
 leafMaterialBanks[2].add('sandyBrown', std(0xF4A460, 0.8));
 
 // Browns (more matte)
-leafMaterialBanks[3].add('darkBrown',   std(0x654321, 0.95));
+leafMaterialBanks[3].add('darkBrown', std(0x654321, 0.95));
 leafMaterialBanks[3].add('saddleBrown', std(0x8B4513, 0.95));
 leafMaterialBanks[3].add('coffeeBrown', std(0x5C4033, 0.95));
-leafMaterialBanks[3].add('chestnut',    std(0x7E481C, 0.95));
-leafMaterialBanks[3].add('cafeAuLait',  std(0x6F4E37, 0.95));
+leafMaterialBanks[3].add('chestnut', std(0x7E481C, 0.95));
+leafMaterialBanks[3].add('cafeAuLait', std(0x6F4E37, 0.95));
 
 // Greens
-leafMaterialBanks[4].add('darkOlive',  std(0x556B2F, 0.9));
-leafMaterialBanks[4].add('fernGreen',  std(0x4F7942, 0.9));
+leafMaterialBanks[4].add('darkOlive', std(0x556B2F, 0.9));
+leafMaterialBanks[4].add('fernGreen', std(0x4F7942, 0.9));
 leafMaterialBanks[4].add('forestMoss', std(0x2E4600, 0.9));
-leafMaterialBanks[4].add('darkMoss',   std(0x3A5311, 0.9));
-leafMaterialBanks[4].add('evergreen',  std(0x1B4D3E, 0.9));
+leafMaterialBanks[4].add('darkMoss', std(0x3A5311, 0.9));
+leafMaterialBanks[4].add('evergreen', std(0x1B4D3E, 0.9));
 
 
 // random integer in [0, N)  (0 up to N-1)
 function randint(N) {
-  return Math.floor(Math.random() * N);
+    return Math.floor(Math.random() * N);
 }
 
 function init_leaves() {
@@ -599,12 +611,17 @@ function step_sim() {
 }
 
 /* ------------------------------- RUN LOOP ---------------------------------- */
+let _heatmapTick = 0; const update_heatmap_every_n_frames = 32;
 let t = 0;
 const leaves = init_leaves();
 hud.add(leaves[0])
 
 // setup
 domain_wire = add_domain_box();
+if (!_domainWireVisible) {
+    domain_wire.visible = false;
+}
+
 
 const DT = sim_params.dt;
 const MAX_FRAME = 0.1;
@@ -646,6 +663,11 @@ function loop(now_ms) {
 
     renderer.render(scene, cam);
     // composer.render();
+    const step = Math.max(1, (update_heatmap_every_n_frames | 0)); // clamp & int
+    _heatmapTick = (_heatmapTick + 1) | 0;
+    if ((_heatmapTick % step) === 0) {
+        updateLeafDensityPlot(densityChart, leaves, domain);
+    }
     pushCamYPositionSample(chart, t, cam.position.y);
     requestAnimationFrame(loop);
 }
