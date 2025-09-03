@@ -3,7 +3,7 @@
  * @Author: alex
  * @Date: 2025-08-18 14:17:56
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 12:51:42
+ * @Last Modified time: 2025-09-03 13:22:57
  */
 
 import * as THREE from 'three';
@@ -112,15 +112,15 @@ export class Leaf {
     const f = domain.padding_fraction;
     if ((where) && (where === 'top-ish')) {
       this.x.set(
-        randomUniformByRange(0, L.x),
-        randomUniformByRange(0, L.y),
-        randomUniformByRange(0.9 * L.z, (1 + f.z) * L.z),
+        randomUniformByRange(-L.x * f.x, (1 + f.x) * L.x),
+        randomUniformByRange(0.9 * L.y, (1 + f.y) * L.y),
+        randomUniformByRange(0, L.z),
       );
     } else {
       this.x.set(
-        randomUniformByRange(0, L.x),
-        randomUniformByRange(0, L.y),
-        randomUniformByRange(-f.z * L.z, (1 + f.z) * L.z),
+        randomUniformByRange(-L.x * f.x, (1 + f.x) * L.x),
+        randomUniformByRange(-L.y * f.y, (1 + f.y) * L.y),
+        randomUniformByRange(-L.z * f.z, (1 + f.z) * L.z),
       );
     }
   }
