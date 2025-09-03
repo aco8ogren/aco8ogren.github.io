@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-02 17:56:18
+ * @Last Modified time: 2025-09-03 13:02:54
  */
 
 import * as THREE from 'three';
@@ -38,7 +38,7 @@ console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
 let domain_wire = null;
-let _hudVisible = false;
+let _hudVisible = true;
 // hud
 const hud = new HudOrchestrator({ startVisible: _hudVisible, precision: 3 });
 //
@@ -277,6 +277,7 @@ hud.add(view);
 view.setScope(cam_params.scope);
 view.setProjection(cam_params.projection);
 view.setDistance(cam_params.distance);
+view.setProgressMode({x: 'local', y: 'global'})
 
 const strip = document.getElementById('page-strip');
 const pages = Array.from(strip.querySelectorAll('.page'));

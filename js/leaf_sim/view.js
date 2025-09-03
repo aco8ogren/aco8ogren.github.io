@@ -81,22 +81,44 @@ export class View {
         this.distance = Math.max(0.0001, +dMeters || 0.0001);
         this.fit();
     }
-    setPanDir({ x, y } = {}) {
-        if (x === +1 || x === -1) {
-            this.panDir.x = x;
-        } else {
-            throw new Error('invalid pan direction for x')
-        }
-        if (y === +1 || y === -1) {
-            this.panDir.y = y;
-        } else {
-            throw new Error('invalid pan direction for x')
-        }
-        this._updateTargetFromScroll();
-    }
     setDomain(domain) {
         this.domain = domain;
         this.fit();
+    }
+    setDamping(lambda, eps = this._damp.eps) {
+        const L = Number(lambda);
+        const E = Number(eps);
+        if (Number.isFinite(L) && L > 0) this._damp.lambda = L;
+        if (Number.isFinite(E) && E >= 0) this._damp.eps = E;
+        return this;
+    }
+    swap_camera(newCam) {
+        this.cam = newCam;
+        this.fit();
+    }
+    setPanDir({ x, y } = {}) {
+        if (x !== undefined) {
+            if (x === +1 || x === -1) this.panDir.x = x;
+            else throw new Error('invalid pan direction for x');
+        }
+        if (y !== undefined) {
+            if (y === +1 || y === -1) this.panDir.y = y;
+            else throw new Error('invalid pan direction for y'); // fixed message
+        }
+        this._updateTargetFromScroll();
+    }
+    setProgressMode({ x, y } = {}) {
+        const check = (m) => {
+            const s = String(m).toLowerCase();
+            if (s !== 'local' && s !== 'global') {
+                throw new Error('setProgressMode: mode must be "local" or "global"');
+            }
+            return s;
+        };
+        if (x !== undefined) this._progressModeX = check(x);
+        if (y !== undefined) this._progressModeY = check(y);
+        this._updateTargetFromScroll();
+        this._settled = false;
     }
     setScrollSource({ x = undefined, y = undefined } = {}) {
         const attachAll = (axis, arr) => {
@@ -120,17 +142,6 @@ export class View {
         this._recomputePanWindows();
         this._updateTargetFromScroll();
         this._settled = false;
-    }
-    setDamping(lambda, eps = this._damp.eps) {
-        const L = Number(lambda);
-        const E = Number(eps);
-        if (Number.isFinite(L) && L > 0) this._damp.lambda = L;
-        if (Number.isFinite(E) && E >= 0) this._damp.eps = E;
-        return this;
-    }
-    swap_camera(newCam) {
-        this.cam = newCam;
-        this.fit();
     }
     fit() {
         // Canvas + aspect
@@ -176,6 +187,25 @@ export class View {
     }
 
     // scroll mapping helpers
+    _scrollSpanPx(el, axis) {
+        // Return the scrollable span in CSS pixels (>= 1 to avoid div-by-zero)
+        const clamp1 = (v) => Math.max(1, v | 0);
+
+        // Window/document fallback
+        if (!el || el === window || el === document || el === document.scrollingElement) {
+            const doc = document.scrollingElement || document.documentElement;
+            return axis === 'y'
+                ? clamp1(doc.scrollHeight - doc.clientHeight)
+                : clamp1(doc.scrollWidth - doc.clientWidth);
+        }
+
+        // Element
+        return axis === 'y'
+            ? clamp1(el.scrollHeight - el.clientHeight)
+            : clamp1(el.scrollWidth - el.clientWidth);
+    }
+
+
     _recomputePanWindows() {
         const visW = this._vis.w;
         const visH = this._vis.h;
@@ -198,42 +228,51 @@ export class View {
         };
     }
 
-    _progressFromEl(el, axis) {
-        if (!el) return 0; // default start
+    _progressFromEl(el, axis, refSpanPx /* optional */) {
+        // Compute current offset in px for this el
+        let offsetPx = 0;
 
-        // window fallback
-        if (el === window || el === document || el === document.scrollingElement) {
-            if (axis === 'y') {
-                const doc = document.scrollingElement || document.documentElement;
-                const max = (doc.scrollHeight - doc.clientHeight) || 1;
-                return Math.min(1, Math.max(0, doc.scrollTop / max));
-            } else {
-                const doc = document.scrollingElement || document.documentElement;
-                const max = (doc.scrollWidth - doc.clientWidth) || 1;
-                return Math.min(1, Math.max(0, doc.scrollLeft / max));
-            }
-        }
-
-        // element scroll
-        if (axis === 'y') {
-            const max = (el.scrollHeight - el.clientHeight) || 1;
-            return Math.min(1, Math.max(0, el.scrollTop / max));
+        if (!el || el === window || el === document || el === document.scrollingElement) {
+            const doc = document.scrollingElement || document.documentElement;
+            offsetPx = (axis === 'y') ? doc.scrollTop : doc.scrollLeft;
         } else {
-            const max = (el.scrollWidth - el.clientWidth) || 1;
-            return Math.min(1, Math.max(0, el.scrollLeft / max));
+            offsetPx = (axis === 'y') ? el.scrollTop : el.scrollLeft;
         }
+
+        const spanPx = refSpanPx ?? this._scrollSpanPx(el, axis); // local if refSpanPx is undefined
+        const p = spanPx > 0 ? (offsetPx / spanPx) : 0;
+        return Math.min(1, Math.max(0, p));
     }
+
     _updateTargetFromScroll() {
         if (this.scope !== 'distance') return;
 
         const clamp = (v, lo, hi) => (v < lo ? lo : (v > hi ? hi : v));
         const lerp = (a, b, t) => a + (b - a) * t;
 
-        // 0..1 progress for a single element on an axis
-        const pEl = (el, axis) => this._progressFromEl(el, axis);
+        // Compute axis reference spans (in px) once per frame
+        const longestSpan = (axis) => {
+            const arr = this.scrollEls[axis] || [];
+            let maxPx = 1; // avoid zero
+            if (arr.length === 0) {
+                // If no scrollers registered, fall back to window/document span
+                maxPx = this._scrollSpanPx(window, axis);
+            } else {
+                for (const el of arr) {
+                    const px = this._scrollSpanPx(el, axis);
+                    if (px > maxPx) maxPx = px;
+                }
+            }
+            return maxPx;
+        };
 
-        // Average horizontal progress (0..1) across all X scrollers.
-        // This gives us a stable horizontal "cursor" to pick neighbors for Y.
+        const refSpanX = (this._progressModeX === 'global') ? longestSpan('x') : undefined; // undefined => local
+        const refSpanY = (this._progressModeY === 'global') ? longestSpan('y') : undefined;
+
+        // 0..1 progress for a single element on an axis, normalized per mode
+        const pEl = (el, axis) => this._progressFromEl(el, axis, axis === 'x' ? refSpanX : refSpanY);
+
+        // Average horizontal progress across all X scrollers → stable horizontal "cursor"
         let posX01 = 0;
         if (this.scrollEls.x.length) {
             let sum = 0;
@@ -241,10 +280,7 @@ export class View {
             posX01 = sum / this.scrollEls.x.length;
         }
 
-        // Symmetric px:
-        // - if 0: px = 0
-        // - if 1: px = that element's x-progress
-        // - if >=2: find left/right neighbors by index and lerp
+        // Symmetric px on X: interpolate neighbors by index
         let px = 0;
         {
             const arr = this.scrollEls.x;
@@ -252,17 +288,18 @@ export class View {
             if (n === 1) {
                 px = pEl(arr[0], 'x');
             } else if (n >= 2) {
-                const pos = posX01 * (n - 1);          // 0..(n-1)
+                const pos = posX01 * (n - 1);      // 0..(n-1)
                 const i0 = clamp(Math.floor(pos), 0, n - 1);
                 const i1 = clamp(i0 + 1, 0, n - 1);
                 const t = i1 === i0 ? 0 : (pos - i0);
                 const p0 = pEl(arr[i0], 'x');
                 const p1 = pEl(arr[i1], 'x');
                 px = lerp(p0, p1, t);
-            } // else (n===0) px stays 0
+            }
+            // else n===0 ⇒ px=0
         }
 
-        // Symmetric py (driven by horizontal cursor posX01 for neighbor choice):
+        // Symmetric py on Y: neighbors chosen by horizontal cursor (posX01)
         let py = 0;
         {
             const arr = this.scrollEls.y;
@@ -270,17 +307,18 @@ export class View {
             if (m === 1) {
                 py = pEl(arr[0], 'y');
             } else if (m >= 2) {
-                const pos = posX01 * (m - 1);          // 0..(m-1)
+                const pos = posX01 * (m - 1);      // 0..(m-1)
                 const j0 = clamp(Math.floor(pos), 0, m - 1);
                 const j1 = clamp(j0 + 1, 0, m - 1);
                 const t = j1 === j0 ? 0 : (pos - j0);
                 const y0 = pEl(arr[j0], 'y');
                 const y1 = pEl(arr[j1], 'y');
                 py = lerp(y0, y1, t);
-            } // else (m===0) py stays 0
+            }
+            // else m===0 ⇒ py=0
         }
 
-        // Map to camera target
+        // Map to camera target (world units) using the same domain-limited _pan.* travel
         const camX = this._pan.x.travel > 0 ? (this._pan.x.base + this.panDir.x * (px * this._pan.x.travel)) : this._pan.x.base;
         const camY = this._pan.y.travel > 0 ? (this._pan.y.base + this.panDir.y * (py * this._pan.y.travel)) : this._pan.y.base;
 
