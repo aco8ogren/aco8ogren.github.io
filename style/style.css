@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 14:31:50
+ * @Last Modified time: 2025-09-03 20:29:34
  */
 /* =========================
    0) THEME VARIABLES
@@ -33,9 +33,10 @@ body {
     height: 100%;
     overflow: hidden;
     /* horizontal strip handles X; scrollers handle Y */
-    background: #0f1218;
+    background: #ee08ea;
     color: #eaf2ff;
     font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    z-index: -10000;
 }
 
 a {
@@ -83,23 +84,14 @@ a:focus {
     scroll-snap-align: start;
 }
 
-/* =========================
-   3) SCROLL CONTAINERS
-   ========================= */
-
-/* Overlay variant (full-bleed scroller that covers its container) */
-.scroller--overlay {
-    position: absolute;
-    inset: 0;
-}
-
 /* Default scroller */
 .scroller {
+    position: relative;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 2rem 1rem 3rem;
     max-width: var(--col-max);
     margin: 0 auto;
+    padding: 1em;
     background-color: #0a567438;
     backdrop-filter: blur(1px);
 
@@ -164,15 +156,16 @@ a:focus {
     /* header (auto) + body (fills) */
 }
 
-.center-col {
+.center-horizontally {
     max-width: var(--col-max);
     margin: 0 auto;
-    padding: 1rem;
+    padding: 0px;
 }
 
-.page-header {
-    background: rgba(15, 18, 24, .95);
+.header {
+    background: rgba(38, 59, 100, 0.682);
     backdrop-filter: blur(4px);
+    margin: 0px;
 }
 
 .page-body {
@@ -182,66 +175,49 @@ a:focus {
     padding-bottom: 2rem;
 }
 
-/* =========================
-   5) COMPONENTS / UTILITIES
-   ========================= */
-/* Nav as a simple 2-cell grid */
-.nav-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: 1rem;
-    margin: 1rem 0;
+.page-body.scroller{
+    margin-top: 0px;
 }
 
-/* Place by role */
-.nav-row .prev {
-    grid-column: 1;
-    justify-self: start;
+/* nav */
+.nav-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    /* space between links on the left side */
+    margin: 0.5rem 0;
+    /* a little breathing room under the H1 */
+    flex-wrap: wrap;
+    /* mobile: allow wrapping */
 }
 
 .nav-row .next {
-    grid-column: 2;
-    justify-self: end;
-}
-
-/* Optional: single-column layout on small screens */
-@media (max-width: 640px) {
-    .nav-row {
-        grid-template-columns: 1fr;
-    }
-
-    .nav-row .prev {
-        justify-self: start;
-    }
-
-    .nav-row .next {
-        justify-self: end;
-    }
+    margin-left: auto;
 }
 
 .nav-link {
     display: inline-block;
-    padding: 0.25rem .75rem;
+    padding: 0.25rem .40rem;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.034);
     border: 1px solid rgba(255, 255, 255, .12);
     color: #8ec5ff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    line-height: 1;
+    vertical-align: middle;
+    /* space between icon + text */
 }
 
 .nav-link:hover {
     text-decoration: underline;
-    font-weight: 600;
 }
 
-/* sticky row example inside a scroller */
-.scroller .nav-row--sticky {
-    position: sticky;
-    bottom: 1rem;
-    background: linear-gradient(180deg, transparent, rgba(15, 18, 24, 0.85));
-    padding: .5rem .25rem;
-    backdrop-filter: blur(2px);
-    border-radius: 12px;
+.icon {
+    height: 1em;
+    width: 1em;
+    display: block;
 }
 
 .copy {
@@ -260,10 +236,9 @@ a:focus {
    5) PLOTTING
    ========================= */
 
-.camera-position-plot {
+.hud-panel {
     position: fixed;
     right: 12px;
-    top: 12px;
     width: 360px;
     height: 180px;
     z-index: 30;
@@ -272,19 +247,8 @@ a:focus {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     pointer-events: none;
-    /* HUD shouldn't eat mouse */
+    /* HUD shouldn’t eat mouse */
 }
-.density-plot {
-    position: fixed;
-    right: 12px;
-    top: 204px;
-    width: 360px;
-    height: 180px;
-    z-index: 30;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(2px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    pointer-events: none;
-    /* HUD shouldn't eat mouse */
-}
+
+.camera-position-plot { top: 12px;  }
+.density-plot         { top: 204px; }

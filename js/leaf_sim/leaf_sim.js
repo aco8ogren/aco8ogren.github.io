@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 14:46:31
+ * @Last Modified time: 2025-09-03 20:11:37
  */
 
 import * as THREE from 'three';
@@ -172,25 +172,57 @@ let _quiver_frame = 0;            // throttle counter
 
 
 /* --------------------------- THREE.JS SCENE SETUP -------------------------- */
-const view_container = document.createElement('div');
-view_container.style.position = 'fixed';
-view_container.style.left = '0.5%';
-view_container.style.bottom = '0.5%';
-view_container.style.width = '99%';
-view_container.style.height = '83%';
-view_container.style.border = '1px solid #1d2733';
-view_container.style.borderRadius = '8px';
-view_container.style.overflow = 'visible';
-view_container.style.background = '#0b0e13';
-view_container.style.zIndex = '0';
-document.body.appendChild(view_container);
+// --- host canvas (DOM) ---
+const view_dom_el = document.createElement('canvas');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio ?? 1, 2));
-renderer.setClearColor(0x0b0e13, 1);
-renderer.domElement.style.position = 'absolute';
-renderer.domElement.style.inset = '0';
-view_container.appendChild(renderer.domElement);
+// Position it where you want it (fixed card in the viewport)
+view_dom_el.style.position = 'fixed';
+view_dom_el.style.left = '0%';
+view_dom_el.style.bottom = '0%';
+view_dom_el.style.width = '100%';
+view_dom_el.style.height = '100%';
+
+// Visuals
+view_dom_el.style.border = 'none'; // '1px solid #1d2733'
+view_dom_el.style.borderRadius = '0px'; // '8px'
+view_dom_el.style.overflow = 'hidden';        // clip rounded corners
+view_dom_el.style.background = 'transparent'; // let renderer show through
+view_dom_el.style.zIndex = '0';
+// Optional: let clicks pass through (if UI is above it)
+// view_dom_el.style.pointerEvents = 'none';
+
+document.body.appendChild(view_dom_el);
+
+// --- three.js renderer ---
+const renderer = new THREE.WebGLRenderer({
+  canvas: view_dom_el,                 // use THIS canvas
+  antialias: true,
+  alpha: true,                         // allow transparency
+  powerPreference: 'high-performance',
+});
+
+// Transparent clear so you don't get a black band from the canvas itself
+renderer.setClearColor(0x000000, 0);   // or: renderer.setClearAlpha(0)
+
+// Pixel ratio & size
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+// Helper to match the renderer buffer to the canvas CSS size
+function resizeRendererToCanvas() {
+  // Use the computed CSS size of the canvas
+  const rect = view_dom_el.getBoundingClientRect();
+  // setSize with third arg = false → respect CSS size; only update drawing buffer
+  renderer.setSize(rect.width, rect.height, false);
+}
+resizeRendererToCanvas();
+window.addEventListener('resize', resizeRendererToCanvas);
+
+// IMPORTANT: since view_dom_el === renderer.domElement already,
+// do NOT append it again and do NOT set conflicting position on renderer.domElement.
+// (No need for: renderer.domElement.style.position = 'absolute'; ...)
+// Just render as usual:
+// renderer.render(scene, camera);
+
 
 function make_camera(cam_params) {
     if (cam_params.projection === 'perspective') {
@@ -272,7 +304,7 @@ function scrollerFor(page) {
     );
 }
 
-export const view = new View(renderer, cam, view_container, domain, cam_params.scope);
+export const view = new View(renderer, cam, view_dom_el, domain, cam_params.scope);
 hud.add(view);
 view.setScope(cam_params.scope);
 view.setProjection(cam_params.projection);
