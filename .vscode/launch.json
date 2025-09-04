@@ -25,7 +25,7 @@
         "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe"
       },
       "osx": {
-        "runtimeExecutable": "/opt/homebrew/bin/node"
+        "runtimeExecutable": "/usr/local/bin/node"
       },
       "linux": {
         "runtimeExecutable": "/usr/bin/node"
@@ -50,7 +50,7 @@
         "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe"
       },
       "osx": {
-        "runtimeExecutable": "/opt/homebrew/bin/node"
+        "runtimeExecutable": "/usr/local/bin/node"
       },
       "linux": {
         "runtimeExecutable": "/usr/bin/node"
