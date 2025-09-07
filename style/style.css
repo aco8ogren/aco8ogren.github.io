@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 21:36:28
+ * @Last Modified time: 2025-09-06 17:25:13
  */
 /* =========================
    0) THEME VARIABLES
@@ -214,6 +214,204 @@ a:focus {
   mask-repeat: no-repeat;
 }
 
+/* =========================
+   Resume (drop-in section)
+   Target markup: <div class="resume" id="resume-asari">…</div>
+   ========================= */
+
+.resume {
+  /* Tunables */
+  --resume-maxw: 980px;
+  --resume-rule: #c8c8c8;         /* light gray rules (auto-swapped in dark mode) */
+  --resume-accent: #333;          /* section heading color */
+  --resume-gap: 0.6rem;           /* vertical rhythm baseline */
+
+  font: inherit;
+  color: inherit;
+  line-height: 1.5;
+  background: transparent;
+  box-sizing: border-box;
+  margin-inline: auto;
+  max-width: var(--resume-maxw);
+}
+
+.resume * { box-sizing: border-box; }
+
+/* Header */
+.resume .resume-header {
+  padding-block-end: calc(var(--resume-gap) * 1.25);
+  margin-block-end: calc(var(--resume-gap) * 1.25);
+  border-bottom: 1px solid var(--resume-rule);
+}
+
+.resume .resume-header h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-size: clamp(1.4rem, 2.2vw + 0.6rem, 2rem);
+  line-height: 1.2;
+}
+
+.resume .resume-header p {
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.resume .resume-header a {
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.resume .resume-header a:hover,
+.resume .resume-header a:focus-visible { border-bottom-style: solid; }
+
+/* Sections */
+.resume section {
+  margin-block: calc(var(--resume-gap) * 1.25);
+}
+.resume h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--resume-accent);
+}
+
+/* Entries */
+.resume h4 {
+  /* two-column feel: title left, meta (location | dates) right; stacks on narrow */
+  margin: 0.6rem 0 0.15rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+}
+.resume h4 span {
+  font-weight: 400;
+  opacity: 0.8;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.resume article + article {
+  margin-top: calc(var(--resume-gap) * 0.9);
+  padding-top: calc(var(--resume-gap) * 0.9);
+  border-top: 1px dashed var(--resume-rule);
+}
+
+/* Lists */
+.resume ul,
+.resume ol {
+  margin: 0.25rem 0 0.75rem 1.15rem;
+  padding: 0;
+}
+.resume li { margin-block: 0.25rem; }
+
+/* Links (general) */
+.resume a { color: inherit; }
+.resume a:hover,
+.resume a:focus-visible { text-decoration: underline; }
+
+/* Responsive tweaks */
+@media (max-width: 700px) {
+  .resume { --resume-maxw: 100%; }
+  .resume h4 { grid-template-columns: 1fr; }
+  .resume h4 span { text-align: left; }
+  .resume .resume-header p { font-size: 0.93rem; }
+}
+
+/* Collapsibles inside .resume */
+.resume details {
+  border: 1px solid var(--resume-rule);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.5rem 0;
+  background: transparent;
+}
+
+.resume details > summary {
+  cursor: pointer;
+  list-style: none;           /* hide default marker in some browsers */
+  font-weight: 600;
+  outline: none;
+}
+
+/* Hide built-in triangle (WebKit) */
+.resume details > summary::-webkit-details-marker { display: none; }
+
+/* Custom chevron */
+.resume details > summary::before {
+  content: "";
+  display: inline-block;
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  margin-right: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+  vertical-align: 0.05em;
+}
+.resume details[open] > summary::before { transform: rotate(45deg); }
+
+/* Body text inside panels */
+.resume details > *:not(summary) { margin-top: 0.45rem; }
+
+/* Variants (optional) */
+.resume details.qa { border-style: dashed; }
+.resume details.more { border-style: solid; }
+
+/* Focus/hover affordance */
+.resume details > summary:hover { text-decoration: underline; }
+.resume details > summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Print: make panels look like plain sections */
+@media print {
+  .resume details { border: none; padding: 0; }
+}
+
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .resume {
+    --resume-rule: #2a2f3a;
+    --resume-accent: #cfd6ff;
+  }
+  .resume .resume-header a { border-bottom-color: currentColor; }
+}
+
+/* Print: clean one-pager */
+@media print {
+  .resume {
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* If this lives inside a scrolling container, ensure full print */
+  .page-body.scroller,
+  .page-body .scroller {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .resume section,
+  .resume article { break-inside: avoid; page-break-inside: avoid; }
+  .resume a { text-decoration: none; }
+  /* Show URLs inline for print */
+  .resume a[href^="http"]::after,
+  .resume a[href^="mailto:"]::after,
+  .resume a[href^="tel:"]::after {
+    content: " (" attr(href) ")"; font-size: 0.85em; font-weight: 400;
+  }
+}
+
+
 .page-body {
     /* often also has .scroller */
     overflow-y: auto;
@@ -261,9 +459,16 @@ a:focus {
 }
 
 .icon {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
     height: 1em;
     width: 1em;
     display: block;
+}
+
+.nav-link .icon {
+    vertical-align: -0.15em;
+    margin-right: 0em;
 }
 
 .copy {

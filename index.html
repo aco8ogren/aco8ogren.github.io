@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 21:37:19
+ * @Last Modified time: 2025-09-06 17:31:38
 */
  -->
 <!doctype html>
@@ -40,13 +40,23 @@
           <div class="center-horizontally">
             <h1>Alex Ogren</h1>
             <nav class="nav-row">
-              <a href="https://www.github.com/aco8ogren" class="nav-link">
+              <a href="https://www.github.com/aco8ogren" target="_blank" rel="noopener noreferrer" class="nav-link">
                 <svg class="icon">
                   <use href="#icon-github"></use>
                 </svg>
                 GitHub
               </a>
-              <a href="#page-3" class="nav-link">CV</a>
+              <a href="#page-2" class="nav-link">CV</a>
+              <div class="more">
+                more
+              </div>
+              <a href="https://scholar.google.com/citations?user=nCxgagUAAAAJ&hl=en&oi=ao" target="_blank"
+                rel="noopener noreferrer" class="nav-link">
+                <!-- <svg class="icon">
+                  <use href="#icon-google-scholar"></use>
+                </svg> -->
+                Google Scholar
+              </a>
               <a href="#page-2" class="nav-link next">next →</a>
             </nav>
           </div>
@@ -62,11 +72,6 @@
             I'm motivated by weaving together concepts from different fields to produce novel, impactful solutions to
             real-world problems.
             On this site you will find information about my talents, projects, education, interests, and more.</p>
-          <h4>Education</h4>
-          <p>I grew up in the Twin Cities of Minnesota, went to undergrad at University of Wisconsin - Madison (B.S.
-            Engineering Mechanics + B.S. Applied Math), and recently earned a PhD from Caltech.</p>
-          <h4>Skills</h4>
-          <p></p>
           <div class="spacer"></div>
         </div>
       </div>
@@ -77,7 +82,7 @@
       <div class="page-shell">
         <header class="header">
           <div class="center-horizontally">
-            <h1>falling leaves — page 2</h1>
+            <h1>CV</h1>
             <nav class="nav-row">
               <!-- middle page -->
               <a href="#page-1" class="nav-link prev">← prev</a>
@@ -87,7 +92,136 @@
         </header>
 
         <div class="page-body scroller edge-fade-x" id="pbs2" data-camera-scroll-source>
-          <div id="copies-target-2"></div>
+          <div class="resume" id="resume">
+            <header class="resume-header">
+              <h2>Alex Ogren</h2>
+              <p>
+                email placeholder
+              </p>
+            </header>
+
+            <section>
+              <h3>Education</h3>
+
+              <p>
+                <strong>California Institute of Technology</strong><br>
+                PhD, Mechanical Engineering <em>(May 2024)</em>
+              </p>
+
+              <p>
+                <strong>University of Wisconsin–Madison</strong><br>
+                BS Engineering Mechanics; BS Mathematics <em>(May 2018)</em>
+              </p>
+            </section>
+
+
+            <section>
+              <h3>Experience</h3>
+
+              <article>
+                <h4>PhD Research<br> @ Caltech
+                  <span style="font-weight:normal">Pasadena, California<br>Sept 2018 – May 2024</span>
+                </h4>
+                <!-- <details class="more">
+                  <summary>Key projects & methods</summary>
+                  <p>Built ML surrogate models for dispersion relations; monocular video–based surface-wave inference;
+                    FE packages in MATLAB.</p>
+                </details> -->
+                Combining machine learning with physics-based simulation
+                <ul>
+                  <li>Using machine learning to construct surrogate models for physics-based simulations.</li>
+                  <li>Accelerated computer-aided design of dynamic systems via use of ML surrogate models.</li>
+                  <li>Leveraging computational imaging and inference techniques for mechanical characterization of
+                    dynamic systems using sparse information from monocular video.</li>
+                </ul>
+              </article>
+
+              <article>
+                <h4>Research Engineer Intern<br>
+                  @ Meta Reality Labs
+                  <span style="font-weight:normal">Redmond, Washington<br>May – Sept 2022</span>
+                </h4>
+                <ul>
+                  <li>Characterization of the effects of subsurface features on surface waves in layered material
+                    systems.</li>
+                  <li>Development of analytical and numerical models for surface waves in layered material systems.</li>
+                </ul>
+              </article>
+
+              <article>
+                <h4>Graduate Intern — ATA Engineering (Andy Youngstrom)
+                  <span style="font-weight:normal">| San Diego, California | May – Sept 2018</span>
+                </h4>
+                <ul>
+                  <li>Finite element analysis for structural design evaluation and refinement.</li>
+                </ul>
+              </article>
+
+              <article>
+                <h4>UW–Madison Research — Prof. Jacob Notbohm
+                  <span style="font-weight:normal">| Madison, Wisconsin | Aug 2017 – May 2018</span>
+                </h4>
+                <ul>
+                  <li>Development of experimental methods for the characterization of biological materials.</li>
+                  <li>Rheometry for the mechanical characterization of collagen and polyacrylamide.</li>
+                  <li>Evaluation of the heterogeneity of stiffness of collagen at the length scale of a cell.</li>
+                </ul>
+              </article>
+
+              <article>
+                <h4>Engineering Intern — CommScope (Ross Heggestad)
+                  <span style="font-weight:normal">| Shakopee, Minnesota | May – Aug 2017</span>
+                </h4>
+                <ul>
+                  <li>Software development in Visual Basic to automate optical calibration processes.</li>
+                </ul>
+              </article>
+            </section>
+
+            <section>
+              <h3>Proficiencies</h3>
+              <ul>
+                <li><strong>Coding languages:</strong> Matlab, Python, Maple, limited experience with Visual Basic.</li>
+                <li><strong>Machine learning:</strong> Gaussian Process Regression; some experience with network-based
+                  models.</li>
+                <li><strong>Inference:</strong> Optimization methods to fit physics-based mathematical models to
+                  observed data.</li>
+                <li><strong>Finite elements:</strong> COMSOL, NX Nastran, Abaqus, ANSYS; “2D-dispersion” &amp;
+                  “3D-dispersion-matlab” (specialized in-house FE simulation packages written by me for research, <a
+                    href="https://github.com/aco8ogren" target="_blank" rel="noopener">github.com/aco8ogren</a>).</li>
+                <li><strong>CAD:</strong> SolidWorks, Siemens NX, Autodesk AutoCAD.</li>
+                <li>Proficient with Git.</li>
+                <li>Proficient in Spanish.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3>Publications</h3>
+              <ol>
+                <li>A.C. Ogren, B. Zheng, R. Wang, J. Lee, C. Daraio, K. Liu, G.X. Gu, “Data-Driven Methods for
+                  Architected Metamaterials: Data Curation, Property Prediction, and Intelligent Design” (in
+                  preparation).</li>
+                <li>A.C. Ogren, B.T. Feng, K.L. Bouman, C. Daraio, “Visual Surface Wave Tomography: Estimating Interior
+                  Material Properties from Monocular Video” (in preparation).</li>
+                <li>M.V. Bastawrous, Z. Chen, A.C. Ogren, C. Daraio, C. Rudin, L.C. Brinson, “Phononic materials with
+                  effectively scale-separated hierarchical features using interpretable machine learning” (in
+                  preparation).</li>
+                <li>A.C. Ogren, B.T. Feng, K.L. Bouman, C. Daraio, “Gaussian Process Regression as a Surrogate Model for
+                  the Computation of Dispersion Relations,” (2024, <em>Computer Methods in Applied Mechanics and
+                    Engineering</em>) <a href="https://dx.doi.org/10.2139/ssrn.4546650" target="_blank"
+                    rel="noopener">SSRN</a>.</li>
+                <li>B.T. Feng, A.C. Ogren, C. Daraio, K.L. Bouman, “Visual Vibration Tomography: Estimating Interior
+                  Material Properties from Monocular Video,” (2022, <em>CVPR</em> – Best Paper Honorable Mention) <a
+                    href="https://doi.org/10.48550/arXiv.2104.02735" target="_blank" rel="noopener">arXiv</a>.</li>
+                <li>Z. Chen, A.C. Ogren, C. Daraio, L.C. Brinson, C. Rudin, “How to See Hidden Patterns in Metamaterials
+                  with Interpretable Machine Learning,” (2022, <em>Extreme Mechanics Letters</em>) <a
+                    href="https://doi.org/10.48550/arXiv.2111.05949" target="_blank" rel="noopener">arXiv</a>.</li>
+                <li>M. Proestaki, A.C. Ogren, B. Burkel, J. Notbohm, “Modulus of Fibrous Collagen at the Length Scale of
+                  a Cell,” (2019, <em>Experimental Mechanics</em>) <a href="https://doi.org/10.1007/s11340-018-00453-4"
+                    target="_blank" rel="noopener">link</a>.</li>
+              </ol>
+            </section>
+          </div>
         </div>
       </div>
     </section>
@@ -167,12 +301,32 @@
 <!-- SVG sprite sheet (hidden defs) -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
   <defs>
-    <symbol id="icon-github" viewBox="0 0 98 96" fill="currentColor">
-      <path fill-rule="evenodd" clip-rule="evenodd"
-        d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
+    <!-- GITHUB (normalized to 24×24; "contain" fit) -->
+    <symbol id="icon-github" viewBox="0 0 24 24" fill="currentColor">
+      <!-- Original was 98×96. We scale by s = min(24/98, 24/96) = 0.244898
+       That makes width = 24 exactly; height = 23.510... so we center
+       with a tiny vertical translate of (24-96*s)/2 = 0.244898 -->
+      <g transform="translate(0 0.244898) scale(0.244898)">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+          d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
+      </g>
     </symbol>
+
+    <!-- GOOGLE SCHOLAR -->
+    <symbol id="icon-google-scholar" viewBox="0 0 24 24">
+      <!-- Original was 48×48; scale by 0.5 to fit exactly -->
+      <g transform="scale(0.5)">
+        <path fill="currentColor" fill-rule="evenodd"
+          d="M 24 4 C 12.954 4 4 12.954 4 24 C 4 35.046 12.954 44 24 44 C 35.046 44 44 35.046 44 24 C 44 12.954 35.046 4 24 4 z M 20.710938 11.087891 L 36.236328 11.087891 L 35.095703 12.039062 C 35.111223 12.090072 35.126953 12.140706 35.126953 12.197266 L 35.126953 17.289062 C 35.771239 17.518611 36.236328 18.128543 36.236328 18.851562 L 36.236328 23.841797 C 36.236328 24.761095 35.490456 25.503906 34.572266 25.503906 C 33.654076 25.503906 32.910156 24.761095 32.910156 23.841797 L 32.910156 18.851562 C 32.910156 18.128543 33.373292 17.518611 34.017578 17.289062 L 34.017578 12.9375 L 29.671875 16.558594 C 29.877024 17.289376 29.929688 18.167375 29.929688 19.244141 C 29.929688 23.316115 26.25 23.815577 26.25 25.548828 C 26.25 27.284296 31.134766 28.67024 31.134766 32.962891 C 31.134766 40.136529 22.572266 39.730469 22.572266 39.730469 C 22.572266 39.730469 15.166016 40.005489 15.166016 34.232422 C 15.166016 28.459357 23.567784 28.689453 23.998047 28.689453 C 23.893809 27.367615 23.037109 27.592296 23.037109 26.933594 L 23.037109 25.322266 C 23.037109 25.322266 16.894126 26.022323 16.701172 19.960938 L 10.730469 19.960938 L 20.710938 11.087891 z M 22.693359 14.431641 C 22.468978 14.42887 22.244252 14.456739 22.023438 14.519531 C 20.259137 15.017439 19.375131 17.490852 20.044922 20.054688 C 20.719149 22.610761 22.694683 24.289188 24.458984 23.789062 C 26.225502 23.291154 27.109244 20.814414 26.439453 18.253906 C 25.849504 16.014431 24.264032 14.451032 22.693359 14.431641 z M 23.193359 29.779297 C 20.230309 29.991102 17.946264 31.975344 18.09375 34.210938 C 18.23902 36.452075 20.762669 38.09715 23.724609 37.888672 C 26.689875 37.681303 28.973394 35.699543 28.828125 33.455078 C 28.681747 31.218375 26.159735 29.570819 23.193359 29.779297 z" />
+      </g>
+    </symbol>
+
+
   </defs>
 </svg>
+
+
+
 
 
 </html>
