@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-07 14:38:08
+ * @Last Modified time: 2025-09-08 11:08:36
 */
  -->
 <!doctype html>
@@ -98,63 +98,93 @@
             </header>
 
             <section>
-              <h3>Education</h3>
+              <h2>Education</h2>
 
-              <p>
-                <strong>California Institute of Technology</strong><br>
-                PhD, Mechanical Engineering <em>(May 2024)</em>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">California Institute of Technology</span>
+                  <span class="only-mobile">Caltech</span>
+                </strong>
+                <span class="location only-desktop">Pasadena, California</span>
+                <span class="location only-mobile">Pasadena, CA</span>
+                <span class="position">Ph.D. Mechanical Engineering</span>
+                <time datetime="2024-05" class="date-range">May 2024</time>
               </p>
 
-              <p>
-                <strong>University of Wisconsin–Madison</strong><br>
-                BS Engineering Mechanics; BS Mathematics <em>(May 2018)</em>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">University of Wisconsin–Madison</span>
+                  <span class="only-mobile">UW – Madison</span>
+                </strong>
+                <span class="location only-desktop">Madison, Wisconsin</span>
+                <span class="location only-mobile">Madison, WI</span>
+                <!-- <span class="position">BS Engineering Mechanics<span class="only-desktop">; </span><br class="only-mobile">BS Mathematics</span> -->
+                <span class="position">B.S. Engineering Mechanics<br>B.S. Mathematics</span>
+                <time datetime="2024-05" class="date-range">May 2018</time>
               </p>
             </section>
 
 
             <section>
-              <h3>Experience</h3>
+              <h2>Experience</h2>
 
-              <article>
-                <h4>PhD Research<br> @ Caltech
-                  <span style="font-weight:normal">Pasadena, California<br>Sept 2018 – May 2024</span>
-                </h4>
-                <!-- <details class="more">
-                  <summary>Key projects & methods</summary>
-                  <p>Built ML surrogate models for dispersion relations; monocular video–based surface-wave inference;
-                    FE packages in MATLAB.</p>
-                </details> -->
-                Combining machine learning with physics-based simulation
-                <ul>
-                  <li>Using machine learning to construct surrogate models for physics-based simulations.</li>
-                  <li>Accelerated computer-aided design of dynamic systems via use of ML surrogate models.</li>
-                  <li>Leveraging computational imaging and inference techniques for mechanical characterization of
-                    dynamic systems using sparse information from monocular video.</li>
-                </ul>
-              </article>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">California Institute of Technology</span>
+                  <span class="only-mobile">Caltech</span>
+                </strong>
+                <span class="location only-desktop">Pasadena, California</span>
+                <span class="location only-mobile">Pasadena, CA</span>
+                <span class="position only-desktop">Post-doctoral Scholar</span>
+                <span class="position only-mobile">Post-doc</span>
+                <span class="date-range">
+                  <time datetime="2024-05">May</time> – <time datetime="2024-12">Dec 2024</time>
+                </span>
+              </p>
 
-              <article>
-                <h4>Research Engineer Intern<br>
-                  @ Meta Reality Labs
-                  <span style="font-weight:normal">Redmond, Washington<br>May – Sept 2022</span>
-                </h4>
-                <ul>
-                  <li>Characterization of the effects of subsurface features on surface waves in layered material
-                    systems.</li>
-                  <li>Development of analytical and numerical models for surface waves in layered material systems.</li>
-                </ul>
-              </article>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">Meta Reality Labs</span>
+                  <span class="only-mobile">Meta</span>
+                </strong>
+                <span class="location only-desktop">Redmond, Washington</span>
+                <span class="location only-mobile">Redmond, WA</span>
+                <span class="position only-desktop">Research Engineer Intern</span>
+                <span class="position only-mobile">Research Intern</span>
+                <span class="date-range">
+                  <time datetime="2022-05">May</time> – <time datetime="2022-09">Sept 2022</time>
+                </span>
+              </p>
 
-              <article>
-                <h4>Graduate Intern — ATA Engineering (Andy Youngstrom)
-                  <span style="font-weight:normal">| San Diego, California | May – Sept 2018</span>
-                </h4>
-                <ul>
-                  <li>Finite element analysis for structural design evaluation and refinement.</li>
-                </ul>
-              </article>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">ATA Engineering</span>
+                  <span class="only-mobile">ATA</span>
+                </strong>
+                <span class="location only-desktop">San Diego, California</span>
+                <span class="location only-mobile">San Diego, CA</span>
+                <span class="position only-desktop">Graduate Engineer Intern</span>
+                <span class="position only-mobile">Graduate Intern</span>
+                <span class="date-range">
+                  <time datetime="2018-05">May</time> – <time datetime="2018-09">Sept 2018</time>
+                </span>
+              </p>
 
-              <article>
+              <p class="entry">
+                <strong class="organization">
+                  <span class="only-desktop">University of Wisconsin – Madison</span>
+                  <span class="only-mobile">UW – Madison</span>
+                </strong>
+                <span class="location only-desktop">Madison, Wisconsin</span>
+                <span class="location only-mobile">Madison, WI</span>
+                <span class="position only-desktop">Undergraduate Researcher</span>
+                <span class="position only-mobile">Undergrad Researcher</span>
+                <span class="date-range">
+                  <time datetime="2017-08">Aug 2017</time> – <time datetime="2018-05">May 2018</time>
+                </span>
+              </p>
+
+              <!-- <article>
                 <h4>UW–Madison Research — Prof. Jacob Notbohm
                   <span style="font-weight:normal">| Madison, Wisconsin | Aug 2017 – May 2018</span>
                 </h4>
@@ -163,20 +193,36 @@
                   <li>Rheometry for the mechanical characterization of collagen and polyacrylamide.</li>
                   <li>Evaluation of the heterogeneity of stiffness of collagen at the length scale of a cell.</li>
                 </ul>
-              </article>
+              </article> -->
+              
+              <p class="entry">
+                <strong class="organization">
+                  <span>CommScope</span>                  
+                </strong>
+                <span class="location only-desktop">Shakopee, Minnesota</span>
+                <span class="location only-mobile">Shakopee, MN</span>
+                <span class="position only-desktop">Undergraduate Engineer Intern</span>
+                <span class="position only-mobile">Undergraduate Intern</span>
+                <span class="date-range">
+                  <time datetime="2017-05">May</time> – <time datetime="2017-08">Aug 2017</time>
+                </span>
+              </p>
 
-              <article>
+              <!-- <article>
                 <h4>Engineering Intern — CommScope (Ross Heggestad)
                   <span style="font-weight:normal">| Shakopee, Minnesota | May – Aug 2017</span>
                 </h4>
                 <ul>
                   <li>Software development in Visual Basic to automate optical calibration processes.</li>
                 </ul>
-              </article>
+              </article> -->
             </section>
 
             <section>
               <h3>Proficiencies</h3>
+              <p class="entry">
+                Coding languages
+              </p>
               <ul>
                 <li><strong>Coding languages:</strong> Matlab, Python, Maple, limited experience with Visual Basic.</li>
                 <li><strong>Machine learning:</strong> Gaussian Process Regression; some experience with network-based
