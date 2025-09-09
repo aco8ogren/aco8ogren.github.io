@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-07 23:53:48
+ * @Last Modified time: 2025-09-09 14:27:24
  */
 /* =========================
    0) THEME VARIABLES
@@ -127,6 +127,166 @@ a:focus {
     grid-area: position;
 }
 
+/* ========== Publications Card ========== */
+:root {
+
+    /* card tones */
+    --card-bg: rgba(25, 40, 70, 0.9);
+    /* dark blue-gray */
+    --card-text: #eaf2ff;
+    /* near-white text (matches your body) */
+    --card-muted: #b7c9e7;
+    /* softer text for authors */
+    --card-border: rgba(255, 255, 255, 0.14);
+    /* subtle light border */
+
+    --pub-gap: 0.8rem;
+    --pub-pad: 1rem;
+    --pub-thumbnail-w: 140px;
+    /* default thumbnail width */
+    --pub-thumbnail-r: 1 / 1;
+    /* aspect ratio (w/h) */
+    --pub-radius: 12px;
+    --pub-border: 1px solid color-mix(in oklab, CanvasText 12%, transparent);
+}
+
+/* override with OKLCH darkening if supported */
+@supports (color: oklch(50% 0 0)) {
+    :root {
+        --card-bg: color-mix(in oklch, var(--scroller-bg) 85%, black);
+        --card-border: color-mix(in oklch, var(--scroller-bg) 15%, black);
+        --card-text: color-mix(in oklch, var(--card-bg) 12%, white);
+        --pub-muted: color-mix(in oklab, var(--card-text) 80%, transparent);
+    }
+}
+
+/* Container for a list */
+.pubs {
+    display: grid;
+    gap: 1rem;
+}
+
+/* One publication card */
+.pub-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "row-1"
+        "row-2";
+    gap: var(--pub-gap);
+    padding: var(--pub-pad);
+    border: var(--pub-border);
+    border-radius: var(--pub-radius);
+    background: var(--card-bg) !important;
+    color: var(--card-text);
+}
+
+/* Simple title (header) */
+.pub-row-1 {
+    grid-area: row-1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(24ch);
+    grid-template-areas:
+        "simple-title journal";
+    align-items: center;
+    margin: 0;
+}
+
+.pub-row-2 {
+    grid-area: row-2;
+    display: grid;
+    grid-template-columns: minmax(108px, var(--pub-thumbnail-w)) 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "thumbnail full-title"
+        "thumbnail authors";
+}
+
+.pub-simple-title {
+    display: block;
+    text-
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    grid-area: simple-title;
+    font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+    line-height: 1.25;
+    font-weight: 700;
+    min-width: 0;
+}
+
+.pub-journal {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    grid-area: journal;
+    justify-self: end;
+    text-align: end;
+    font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+    line-height: 1.25;
+    font-weight: 700;
+    font-size: 0.9em;
+    opacity: 0.5;
+    min-width: 0;
+}
+
+/* Thumbnail block */
+
+.pub-thumbnail {
+    grid-area: thumbnail;
+    width: 100%;
+    max-width: var(--pub-thumbnail-w);
+    aspect-ratio: var(--pub-thumbnail-r);
+    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in oklab, CanvasText 6%, transparent);
+}
+
+.pub-thumbnail>img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* contain if you prefer letterboxing */
+    display: block;
+}
+
+/* Full title */
+.pub-full-title {
+    grid-area: full-title;
+    margin: 0;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Authors */
+.pub-authors {
+    grid-area: authors;
+    margin: 0;
+    color: var(--pub-muted);
+    line-height: 1.35;
+}
+
+/* Optional: subtle link styles for titles */
+.pub-card a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.pub-card a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* Compact variant (optional) */
+.pub-card.compact {
+    --pub-thumbnail-w: 110px;
+    --pub-pad: 0.8rem;
+    --pub-gap: 0.6rem;
+}
+
+
 .page {
     position: relative;
     height: 100%;
@@ -134,6 +294,10 @@ a:focus {
 }
 
 /* Default scroller */
+:root {
+    --scroller-bg: rgba(38, 59, 100, 0.682);
+}
+
 .scroller {
     position: relative;
     overflow-y: auto;
@@ -141,7 +305,7 @@ a:focus {
     max-width: var(--col-max);
     margin: 0 auto;
     padding: 3em;
-    background-color: rgba(38, 59, 100, 0.682);
+    background-color: var(--scroller-bg);
     /* #0a567438 */
     backdrop-filter: blur(1px);
 
@@ -365,7 +529,7 @@ a:focus {
 .resume article+article {
     margin-top: calc(var(--resume-gap) * 0.9);
     padding-top: calc(var(--resume-gap) * 0.9);
-    border-top: 1px dashed var(--resume-rule);
+    /* border-top: 1px dashed var(--resume-rule); */
 }
 
 /* Lists */
