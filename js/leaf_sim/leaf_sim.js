@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-03 20:11:37
+ * @Last Modified time: 2025-09-10 13:59:20
  */
 
 import * as THREE from 'three';
@@ -107,8 +107,8 @@ const swirl_params = {
 // --- swirl population ---
 const swirl_population_params = {
     n_init: 0,
-    n_max: 4,
-    lambda_base: 0.5, // base spawn rate [swirls/sec] when there are 0 swirls
+    n_max: 16,
+    lambda_base: 2, // base spawn rate [swirls/sec] when there are 0 swirls
 }
 
 // --- camera params ---
