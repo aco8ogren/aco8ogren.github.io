@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-09 14:27:24
+ * @Last Modified time: 2025-09-09 16:40:34
  */
 /* =========================
    0) THEME VARIABLES
@@ -278,14 +278,6 @@ a:focus {
 .pub-card a:hover {
     text-decoration-thickness: 2px;
 }
-
-/* Compact variant (optional) */
-.pub-card.compact {
-    --pub-thumbnail-w: 110px;
-    --pub-pad: 0.8rem;
-    --pub-gap: 0.6rem;
-}
-
 
 .page {
     position: relative;

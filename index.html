@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-09 14:31:26
+ * @Last Modified time: 2025-09-10 12:06:21
 */
  -->
 <!doctype html>
@@ -257,30 +257,49 @@
             <section>
               <h3>Publications</h3>
 
-              <article class="pub-card">
-                <div class="pub-row-1">
-                  <span class="pub-simple-title">Putting Coconuts in Flasks</span>
-                  <span class="pub-journal">Int. J. Coco.</span>
-                </div>
+              <!-- Controls -->
+              <div class="nav-row" style="gap:.5rem; align-items:center">
+                <input id="pub-search" type="search" placeholder="Search title, authors, journal…"
+                  style="min-width:18ch;flex:1 1 280px">
+                <select id="pub-sort">
+                  <option value="date-desc">Newest first</option>
+                  <option value="title-asc">Title A–Z</option>
+                  <option value="category-asc">Category A–Z</option>
+                </select>
+                <label style="display:inline-flex;gap:.4rem;align-items:center">
+                  <input type="checkbox" id="pub-rev"> Reverse
+                </label>
+              </div>
+              <div class="nav-row" id="pub-cat-wrap" style="gap:.5rem; flex-wrap:wrap"></div>
 
-                <div class="pub-row-2">
-                  <a class="pub-thumbnail" href="paper.pdf" aria-label="Open paper PDF">
-                    <img src="graphics/thumbnails/coconut_flask.svg" alt="Thumbnail for coconut paper">
-                  </a>
+              <!-- Where the cards go -->
+              <section class="pubs" id="publications-list"></section>
 
-                  <h5 class="pub-full-title">
-                    <a href="https://doi.org/xx.xxxx/xxxxx">
-                      A Scientific Analysis of the Insertion of an Entire Coconut into an Erlenmeyer Flask
+              <!-- Card template (matches your existing CSS classes) -->
+              <template id="pub-card-tpl">
+                <article class="pub-card">
+                  <h4 class="pub-row-1">
+                    <span class="pub-simple-title"></span>
+                    <span class="pub-journal"></span>
+                  </h4>
+                  <div class="pub-row-2">
+                    <a class="pub-thumbnail" href="#" aria-label="">
+                      <img src="graphics/thumbnails/coconut_flask.svg" alt="">
                     </a>
-                  </h5>
+                    <h5 class="pub-full-title"><a href="#"></a></h5>
+                    <p class="pub-authors"></p>
+                  </div>
+                </article>
+              </template>
 
-                  <p class="pub-authors">
-                    <strong>Alexander C. Ogren</strong>, Tracy Lu, Jamie Rivera, Priya Shah
-                  </p>
-                </div>
-              </article>
+              <!-- Optional: inline data so it also works without fetch on file:// -->
+              <!-- <script type="application/json" id="pub-data">[ ...your publications.json here... ]</script> -->
 
-              <article class="pub-card">
+
+
+
+              <!-- GPR-dispersion -->
+              <!-- <article class="pub-card">
                 <div class="pub-row-1">
                   <span class="pub-simple-title">GPR-dispersion</span>
                   <span class="pub-journal">Computer Methods in Applied Mechanics and Engineering</span>
@@ -301,11 +320,12 @@
                     <strong>Alexander C. Ogren</strong>, Berthy T. Feng, Katherine L. Bouman, Chiara Daraio
                   </p>
                 </div>
-              </article>
+              </article> -->
 
-              <article class="pub-card">
+              <!-- VSWT/VSWE -->
+              <!-- <article class="pub-card">
                 <div class="pub-row-1">
-                  <span class="pub-simple-title">Visual Surface Wave Tomography</span>
+                  <span class="pub-simple-title">Visual Surface Wave Elastography</span>
                   <span class="pub-journal">ICCV</span>
                 </div>
 
@@ -316,20 +336,21 @@
 
                   <h5 class="pub-full-title">
                     <a href="https://doi.org/xx.xxxx/xxxxx">
-                      Gaussian Process Regression as a Surrogate Model for the Computation of Dispersion Relations
+                      Visual Surface Wave Elastography: Revealing Subsurface Physical Properties via Visible Surface
+                      Waves
                     </a>
                   </h5>
 
                   <p class="pub-authors">
-                    <strong>Alexander C. Ogren</strong>, Berthy T. Feng, Katherine L. Bouman, Chiara Daraio
+                    <strong>Alexander C. Ogren*</strong>, Berthy T. Feng*, Katherine L. Bouman, Chiara Daraio
                   </p>
                 </div>
               </article>
 
               <article class="pub-card">
                 <div class="pub-row-1">
-                  <span class="pub-simple-title">GPR-dispersion</span>
-                  <span class="pub-journal">Computer Methods in Applied Mechanics and Engineering</span>
+                  <span class="pub-simple-title">Visual Vibration Tomography</span>
+                  <span class="pub-journal">CVPR</span>
                 </div>
 
                 <div class="pub-row-2">
@@ -339,15 +360,15 @@
 
                   <h5 class="pub-full-title">
                     <a href="https://doi.org/xx.xxxx/xxxxx">
-                      Gaussian Process Regression as a Surrogate Model for the Computation of Dispersion Relations
+                      Visual Vibration Tomography: Estimating Interior Material Properties from Monocular Video
                     </a>
                   </h5>
 
                   <p class="pub-authors">
-                    <strong>Alexander C. Ogren</strong>, Berthy T. Feng, Katherine L. Bouman, Chiara Daraio
+                    Berthy T. Feng,<strong>Alexander C. Ogren</strong>, Katherine L. Bouman, Chiara Daraio
                   </p>
                 </div>
-              </article>
+              </article> -->
 
               <ol>
                 <li>A.C. Ogren, B. Zheng, R. Wang, J. Lee, C. Daraio, K. Liu, G.X. Gu, “Data-Driven Methods for
@@ -443,6 +464,9 @@
       document.querySelectorAll('.scroller').forEach(el => wire(el));
     })();
   </script>
+
+  <script type="module" src="./js/publications.js"></script>
+  <!-- <script src="./js/publications.js" defer></script> -->
 
 
   <!-- ECharts debug overlay -->
