@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-10 20:58:23
+ * @Last Modified time: 2025-09-11 14:12:42
 */
  -->
 <!doctype html>
@@ -260,10 +260,14 @@
               <details class="filters" id="filters">
                 <summary class="filters-summary">
                   <span>filters</span>
+                  <button id="pub-clear" type="button" class="keyword clear-filters" aria-label="Clear all filters">
+                    clear all filters
+                  </button>
                 </summary>
 
                 <div class="filters-panel">
                   <div class="filter-container">
+
                     <!-- Controls -->
                     <div class="nav-row" style="gap:.5rem; align-items:center">
                       <input id="pub-search" type="search" placeholder="Search title, authors, journal…"
@@ -291,7 +295,11 @@
                 </div>
               </details>
 
+
+
               <div class="kw-summary" id="kw-summary"></div>
+
+
 
               <!-- Target for publication cards -->
               <section class="pubs" id="publications-list"></section>
