@@ -2,13 +2,28 @@
   {
     "id": "metamaterials-data-driven-inprep",
     "title": "Data-Driven Methods for Architected Metamaterials: Data Curation, Property Prediction, and Intelligent Design",
-    "titleShort": "Data-Driven Architected Metamaterials",
-    "authors": ["A.C. Ogren", "B. Zheng", "R. Wang", "J. Lee", "C. Daraio", "K. Liu", "G.X. Gu"],
-    "journal": "",
-    "journalShort": "",
+    "titleShort": "Data-Driven Structured Material Design Review",
+    "authors": [
+      "B. Zheng",
+      "A.C. Ogren*",
+      "R. Wang*",
+      "J. Lee*",
+      "C. Daraio",
+      "K. Liu",
+      "G.X. Gu"
+    ],
+    "journal": "in preparation",
+    "journalShort": "in prep",
     "year": "",
     "date": "",
-    "category": "metamaterials",
+    "category": "",
+    "keywordsVisible": [
+      "structured materials",
+      "machine learning",
+      "surrogate models",
+      "computational material design"
+    ],
+    "keywordsHidden": [],
     "status": "in preparation",
     "doi": "",
     "url": "",
@@ -16,15 +31,33 @@
     "thumbnail": "graphics/thumbnails/coconut_flask.svg"
   },
   {
-    "id": "vswe-inprep",
+    "id": "vswe",
     "title": "Visual Surface Wave Elastography: Estimating Interior Material Properties from Monocular Video",
     "titleShort": "Visual Surface Wave Elastography",
-    "authors": ["A.C. Ogren", "B.T. Feng", "K.L. Bouman", "C. Daraio"],
-    "journal": "",
+    "authors": [
+      "A.C. Ogren",
+      "B.T. Feng",
+      "K.L. Bouman",
+      "C. Daraio"
+    ],
+    "journal": "International Conference on Computer Vision",
     "journalShort": "",
-    "year": "",
+    "year": "2025",
     "date": "",
-    "category": "visual elastography",
+    "category": "",
+    "keywordsVisible": [
+      "visual elastography",
+      "computational imaging",
+      "elastic waves",
+      "inference",
+      "optimization"
+    ],
+    "keywordsHidden": [
+      "dispersion relations",
+      "optimization",
+      "soft materials",
+      "biomechanics"
+    ],
     "status": "in preparation",
     "doi": "",
     "url": "",
@@ -34,13 +67,32 @@
   {
     "id": "phononics-hierarchical-inprep",
     "title": "Phononic materials with effectively scale-separated hierarchical features using interpretable machine learning",
-    "titleShort": "Hierarchical Phononic Materials via IML",
-    "authors": ["M.V. Bastawrous", "Z. Chen", "A.C. Ogren", "C. Daraio", "C. Rudin", "L.C. Brinson"],
-    "journal": "",
-    "journalShort": "",
+    "titleShort": "Hidden Patterns (Hierarchical)",
+    "authors": [
+      "M.V. Bastawrous",
+      "Z. Chen",
+      "A.C. Ogren",
+      "C. Daraio",
+      "C. Rudin",
+      "L.C. Brinson"
+    ],
+    "journal": "Computer Methods in Applied Mechanics and Engineering",
+    "journalShort": "CMAME",
     "year": "",
     "date": "",
-    "category": "metamaterials",
+    "category": "",
+    "keywordsVisible": [
+      "interpretable ML",
+      "surrogate models",
+      "elastic waves",
+      "dispersion relations"
+    ],
+    "keywordsHidden": [
+      "machine learning",
+      "structured materials",
+      "machine learning",
+      "computational material design"
+    ],
     "status": "in preparation",
     "doi": "",
     "url": "",
@@ -50,13 +102,30 @@
   {
     "id": "gp-dispersion-2024",
     "title": "Gaussian Process Regression as a Surrogate Model for the Computation of Dispersion Relations",
-    "titleShort": "GP Surrogate for Dispersion Relations",
-    "authors": ["A.C. Ogren", "B.T. Feng", "K.L. Bouman", "C. Daraio"],
+    "titleShort": "GPR-dispersion",
+    "authors": [
+      "A.C. Ogren",
+      "B.T. Feng",
+      "K.L. Bouman",
+      "C. Daraio"
+    ],
     "journal": "Computer Methods in Applied Mechanics and Engineering",
-    "journalShort": "",
+    "journalShort": "CMAME",
     "year": "2024",
     "date": "",
-    "category": "metamaterials",
+    "category": "",
+    "keywordsVisible": [
+      "physics-based ML",
+      "surrogate models",
+      "elastic waves",
+      "dispersion relations"
+    ],
+    "keywordsHidden": [
+      "machine learning",
+      "gaussian processes",
+      "structured materials",
+      "computational material design"
+    ],
     "status": "",
     "doi": "10.2139/ssrn.4546650",
     "url": "https://dx.doi.org/10.2139/ssrn.4546650",
@@ -67,12 +136,27 @@
     "id": "vvt-cvpr-2022",
     "title": "Visual Vibration Tomography: Estimating Interior Material Properties from Monocular Video",
     "titleShort": "Visual Vibration Tomography",
-    "authors": ["B.T. Feng", "A.C. Ogren", "C. Daraio", "K.L. Bouman"],
-    "journal": "CVPR",
+    "authors": [
+      "B.T. Feng",
+      "A.C. Ogren",
+      "C. Daraio",
+      "K.L. Bouman"
+    ],
+    "journal": "Conference on Computer Vision and Pattern Recognition",
     "journalShort": "CVPR",
     "year": "2022",
     "date": "",
-    "category": "visual elastography",
+    "category": "",
+    "keywordsVisible": [
+      "visual elastography",
+      "computational imaging",
+      "vibrational modes",
+      "inference",
+      "optimization"
+    ],
+    "keywordsHidden": [
+      "soft materials"
+    ],
     "status": "",
     "note": "Best Paper Honorable Mention",
     "doi": "10.48550/arXiv.2104.02735",
@@ -83,13 +167,31 @@
   {
     "id": "iml-metamaterials-eml-2022",
     "title": "How to See Hidden Patterns in Metamaterials with Interpretable Machine Learning",
-    "titleShort": "Hidden Patterns in Metamaterials (IML)",
-    "authors": ["Z. Chen", "A.C. Ogren", "C. Daraio", "L.C. Brinson", "C. Rudin"],
+    "titleShort": "Hidden Patterns",
+    "authors": [
+      "Z. Chen",
+      "A.C. Ogren",
+      "C. Daraio",
+      "L.C. Brinson",
+      "C. Rudin"
+    ],
     "journal": "Extreme Mechanics Letters",
-    "journalShort": "",
+    "journalShort": "EML",
     "year": "2022",
     "date": "",
     "category": "",
+    "keywordsVisible": [
+      "interpretable ML",
+      "surrogate models",
+      "elastic waves",
+      "dispersion relations"
+    ],
+    "keywordsHidden": [
+      "machine learning",
+      "structured materials",
+      "optimization",
+      "computational material design"
+    ],
     "status": "",
     "doi": "10.48550/arXiv.2111.05949",
     "url": "https://doi.org/10.48550/arXiv.2111.05949",
@@ -99,33 +201,30 @@
   {
     "id": "collagen-expmech-2019",
     "title": "Modulus of Fibrous Collagen at the Length Scale of a Cell",
-    "titleShort": "Collagen Modulus at Cell Scale",
-    "authors": ["M. Proestaki", "A.C. Ogren", "B. Burkel", "J. Notbohm"],
+    "titleShort": "Collagen Modulus at Cellular Scale",
+    "authors": [
+      "M. Proestaki",
+      "A.C. Ogren",
+      "B. Burkel",
+      "J. Notbohm"
+    ],
     "journal": "Experimental Mechanics",
-    "journalShort": "",
+    "journalShort": "Exp. Mech.",
     "year": "2019",
     "date": "",
     "category": "",
+    "keywordsVisible": [
+      "biomechanics",
+      "soft materials",
+      "fibrous materials",
+      "heterogeneity",
+      "experimental methods"
+    ],
+    "keywordsHidden": [],
     "status": "",
     "doi": "10.1007/s11340-018-00453-4",
     "url": "https://doi.org/10.1007/s11340-018-00453-4",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
-  },
-  {
-    "id": "coconut-example",
-    "title": "A Scientific Analysis of the Insertion of an Entire Coconut into an Erlenmeyer Flask",
-    "titleShort": "Putting Coconuts in Flasks",
-    "authors": ["Alexander C. Ogren", "Tracy Lu", "Jamie Rivera", "Priya Shah"],
-    "journal": "",
-    "journalShort": "Int. J. Coco.",
-    "year": "",
-    "date": "",
-    "category": "example",
-    "status": "",
-    "doi": "",
-    "url": "",
-    "pdf": "paper.pdf",
     "thumbnail": "graphics/thumbnails/coconut_flask.svg"
   }
 ]

@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-09 16:40:34
+ * @Last Modified time: 2025-09-10 21:11:14
  */
 /* =========================
    0) THEME VARIABLES
@@ -77,24 +77,6 @@ a:focus {
 
 /* WebKit */
 
-/* default to desktop */
-.only-mobile {
-    display: none;
-}
-
-.only-desktop {
-    display: inline;
-}
-
-@media (max-width: 700px) {
-    .only-mobile {
-        display: inline;
-    }
-
-    .only-desktop {
-        display: none;
-    }
-}
 
 .resume .entry {
     display: grid;
@@ -166,6 +148,8 @@ a:focus {
     gap: 1rem;
 }
 
+.pubs .keywords {}
+
 /* One publication card */
 .pub-card {
     display: grid;
@@ -188,7 +172,7 @@ a:focus {
     display: grid;
     grid-template-columns: minmax(0, 1fr) fit-content(24ch);
     grid-template-areas:
-        "simple-title journal";
+        "simple-title simple-title";
     align-items: center;
     margin: 0;
 }
@@ -197,15 +181,17 @@ a:focus {
     grid-area: row-2;
     display: grid;
     grid-template-columns: minmax(108px, var(--pub-thumbnail-w)) 1fr;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
         "thumbnail full-title"
-        "thumbnail authors";
+        "thumbnail journal"
+        "thumbnail authors"
+        "thumbnail keywords";
 }
 
 .pub-simple-title {
     display: block;
-    text-
+    text-align: start;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -221,8 +207,8 @@ a:focus {
     overflow: hidden;
     text-overflow: ellipsis;
     grid-area: journal;
-    justify-self: end;
-    text-align: end;
+    justify-self: start;
+    text-align: start;
     font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
     line-height: 1.25;
     font-weight: 700;
@@ -230,6 +216,196 @@ a:focus {
     opacity: 0.5;
     min-width: 0;
 }
+
+/* .pub-keywords {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    grid-area: keywords;
+    justify-self: start;
+    text-align: start;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    min-width: 0;
+} */
+
+.pub-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-top: .35rem;
+}
+
+.pub-keyword-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+/* Keyword chips as buttons */
+.keyword {
+    appearance: none;
+    border: 1px solid var(--card-border);
+    background: color-mix(in oklab, var(--card-text) 10%, transparent);
+    color: var(--card-text);
+    border-radius: 999px;
+    /* pill */
+    padding: .2rem .6rem;
+    font: inherit;
+    font-size: .78em;
+    line-height: 1.1;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 120ms ease, border-color 120ms ease,
+        transform 120ms ease, box-shadow 120ms ease;
+}
+
+.keyword:hover {
+    background: color-mix(in oklab, var(--card-text) 16%, transparent);
+}
+
+.keyword:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+.keyword:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--card-text) 22%, transparent);
+}
+
+/* Selected/toggled state (use aria-pressed="true" or .is-active) */
+.keyword[aria-pressed="true"],
+.keyword.is-active {
+    background: color-mix(in oklab, var(--card-text) 22%, transparent);
+    /* background: black; */
+    border-color: color-mix(in oklab, var(--card-text) 35%, transparent);
+}
+
+/* Disabled state */
+.keyword:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .keyword {
+        transition: none;
+    }
+}
+
+/* Keyword operator control */
+.kw-sec-label {
+    font-size: .8rem;
+    opacity: .8;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.kw-ops {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin: .25rem 0 .5rem;
+}
+
+.kw-ops .ops-group {
+    display: inline-flex;
+    gap: .35rem;
+}
+
+.kw-summary {
+    font-size: .86rem;
+    opacity: .9;
+}
+
+.kw-ops .op-toggle.keyword {
+    border-radius: 8px;
+    /* was pill; now slightly boxy */
+    padding-block: .35rem;
+    padding-inline: .65rem;
+}
+
+.kw-summary .keyword.kw-badge {
+    font-size: .82em;
+    padding: .15rem .55rem;
+    vertical-align: baseline;
+    pointer-events: none;
+    /* purely informational */
+    cursor: default;
+}
+
+.filters {
+    font-size: 0.88em;
+    margin: .5rem 0 1rem;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: color-mix(in oklab, var(--card-text) 6%, transparent);
+}
+
+/* make the whole summary bar clickable and styled */
+.filters-summary {
+  list-style: none;                /* hide default marker in modern browsers */
+  display: flex;
+  align-items: start;
+  gap: .75rem;
+  padding: .05rem .05rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+
+/* Hide built-in disclosure markers for all details/summary */
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::marker { content: ""; }
+
+/* Universal maple-leaf "chevron" for every summary */
+details > summary::before {
+  content: "";
+  display: inline-block;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  margin-right: 0.5rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  margin-left: 0.3rem;
+
+  /* color via currentColor, shape via mask */
+  background-color: currentColor;
+  -webkit-mask: url("../graphics/maple_leaf_chevron.svg") center / contain no-repeat;
+  mask: url("../graphics/maple_leaf_chevron.svg") center / contain no-repeat;
+
+  /* optional affordance */
+  transition: transform 240ms ease;
+  vertical-align: 0em;
+}
+details[data-state="open"] > summary::before {
+  /* rotate if you like; set to 0deg if you don't want motion */
+  transform: rotate(90deg);
+}
+
+/* smooth open/close with height (JS drives the values) */
+.filters-panel {
+  display: block;            /* was grid */
+  overflow: hidden;          /* clip during animation */
+  height: 0;                 /* closed baseline; JS will set/reset */
+  transition: height 280ms cubic-bezier(.2,.7,.2,1);
+}
+
+.filters-panel { will-change: height; }
+
+/* the inner wrapper actually holds content and clips during the transition */
+.filters-panel > .filter-container {
+  overflow: hidden;
+  padding: .8rem .6rem;      /* keep your interior padding */
+}
+
+/* optional: tighten spacing of controls in the panel */
+.filters .kw-sec-label { margin-top: .25rem; }
 
 /* Thumbnail block */
 
@@ -545,70 +721,6 @@ a:focus {
     text-decoration: underline;
 }
 
-/* Collapsibles inside .resume */
-.resume details {
-    border: 1px solid var(--resume-rule);
-    border-radius: 8px;
-    padding: 0.6rem 0.8rem;
-    margin: 0.5rem 0;
-    background: transparent;
-}
-
-.resume details>summary {
-    cursor: pointer;
-    list-style: none;
-    /* hide default marker in some browsers */
-    font-weight: 600;
-    outline: none;
-}
-
-/* Hide built-in triangle (WebKit) */
-.resume details>summary::-webkit-details-marker {
-    display: none;
-}
-
-/* Custom chevron */
-.resume details>summary::before {
-    content: "";
-    display: inline-block;
-    inline-size: 0.55rem;
-    block-size: 0.55rem;
-    margin-right: 0.5rem;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(-45deg);
-    transition: transform 160ms ease;
-    vertical-align: 0.05em;
-}
-
-.resume details[open]>summary::before {
-    transform: rotate(45deg);
-}
-
-/* Body text inside panels */
-.resume details>*:not(summary) {
-    margin-top: 0.45rem;
-}
-
-/* Variants (optional) */
-.resume details.qa {
-    border-style: dashed;
-}
-
-.resume details.more {
-    border-style: solid;
-}
-
-/* Focus/hover affordance */
-.resume details>summary:hover {
-    text-decoration: underline;
-}
-
-.resume details>summary:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
-}
-
 .page-body {
     /* often also has .scroller */
     overflow-y: auto;
@@ -704,4 +816,23 @@ a:focus {
 
 .density-plot {
     top: 204px;
+}
+
+/* desktop vs. mobile gets the last word */
+.only-mobile {
+    display: none;
+}
+
+.only-desktop {
+    display: inline;
+}
+
+@media (max-width: 700px) {
+    .only-mobile {
+        display: inline;
+    }
+
+    .only-desktop {
+        display: none;
+    }
 }

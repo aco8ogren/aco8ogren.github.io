@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-10 12:06:21
+ * @Last Modified time: 2025-09-10 20:58:23
 */
  -->
 <!doctype html>
@@ -257,142 +257,63 @@
             <section>
               <h3>Publications</h3>
 
-              <!-- Controls -->
-              <div class="nav-row" style="gap:.5rem; align-items:center">
-                <input id="pub-search" type="search" placeholder="Search title, authors, journal…"
-                  style="min-width:18ch;flex:1 1 280px">
-                <select id="pub-sort">
-                  <option value="date-desc">Newest first</option>
-                  <option value="title-asc">Title A–Z</option>
-                  <option value="category-asc">Category A–Z</option>
-                </select>
-                <label style="display:inline-flex;gap:.4rem;align-items:center">
-                  <input type="checkbox" id="pub-rev"> Reverse
-                </label>
-              </div>
-              <div class="nav-row" id="pub-cat-wrap" style="gap:.5rem; flex-wrap:wrap"></div>
+              <details class="filters" id="filters">
+                <summary class="filters-summary">
+                  <span>filters</span>
+                </summary>
 
-              <!-- Where the cards go -->
+                <div class="filters-panel">
+                  <div class="filter-container">
+                    <!-- Controls -->
+                    <div class="nav-row" style="gap:.5rem; align-items:center">
+                      <input id="pub-search" type="search" placeholder="Search title, authors, journal…"
+                        style="min-width:18ch;flex:1 1 280px">
+                      <select id="pub-sort">
+                        <option value="date-desc">Newest first</option>
+                        <option value="title-asc">Title A–Z</option>
+                      </select>
+                      <label style="display:inline-flex;gap:.4rem;align-items:center">
+                        <input type="checkbox" id="pub-rev"> Reverse
+                      </label>
+                    </div>
+                    <!-- keywords -->
+                    <div class="kw-sec-label">keywords</div>
+                    <div class="nav-row pub-keyword-bar" id="pub-kwbar"></div>
+
+                    <div class="kw-ops" id="kw-ops">
+                      <div class="kw-sec-label">keyword operator</div>
+                      <div class="ops-group" role="group" aria-label="keyword operator">
+                        <button type="button" class="keyword op-toggle" id="kw-op-and" aria-pressed="false">and</button>
+                        <button type="button" class="keyword op-toggle" id="kw-op-or" aria-pressed="true">or</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <div class="kw-summary" id="kw-summary"></div>
+
+              <!-- Target for publication cards -->
               <section class="pubs" id="publications-list"></section>
 
-              <!-- Card template (matches your existing CSS classes) -->
+              <!-- Publication card template -->
               <template id="pub-card-tpl">
                 <article class="pub-card">
-                  <h4 class="pub-row-1">
+                  <div class="pub-row-1">
                     <span class="pub-simple-title"></span>
-                    <span class="pub-journal"></span>
-                  </h4>
+                  </div>
                   <div class="pub-row-2">
                     <a class="pub-thumbnail" href="#" aria-label="">
                       <img src="graphics/thumbnails/coconut_flask.svg" alt="">
                     </a>
                     <h5 class="pub-full-title"><a href="#"></a></h5>
+                    <span class="pub-journal pub-journal-full only-desktop"></span>
+                    <span class="pub-journal pub-journal-short only-mobile"></span>
+                    <div class="pub-keywords" hidden></div>
                     <p class="pub-authors"></p>
                   </div>
                 </article>
               </template>
-
-              <!-- Optional: inline data so it also works without fetch on file:// -->
-              <!-- <script type="application/json" id="pub-data">[ ...your publications.json here... ]</script> -->
-
-
-
-
-              <!-- GPR-dispersion -->
-              <!-- <article class="pub-card">
-                <div class="pub-row-1">
-                  <span class="pub-simple-title">GPR-dispersion</span>
-                  <span class="pub-journal">Computer Methods in Applied Mechanics and Engineering</span>
-                </div>
-
-                <div class="pub-row-2">
-                  <a class="pub-thumbnail" href="paper.pdf" aria-label="Open paper PDF">
-                    <img src="graphics/thumbnails/coconut_flask.svg" alt="Thumbnail for coconut paper">
-                  </a>
-
-                  <h5 class="pub-full-title">
-                    <a href="https://doi.org/xx.xxxx/xxxxx">
-                      Gaussian Process Regression as a Surrogate Model for the Computation of Dispersion Relations
-                    </a>
-                  </h5>
-
-                  <p class="pub-authors">
-                    <strong>Alexander C. Ogren</strong>, Berthy T. Feng, Katherine L. Bouman, Chiara Daraio
-                  </p>
-                </div>
-              </article> -->
-
-              <!-- VSWT/VSWE -->
-              <!-- <article class="pub-card">
-                <div class="pub-row-1">
-                  <span class="pub-simple-title">Visual Surface Wave Elastography</span>
-                  <span class="pub-journal">ICCV</span>
-                </div>
-
-                <div class="pub-row-2">
-                  <a class="pub-thumbnail" href="paper.pdf" aria-label="Open paper PDF">
-                    <img src="graphics/thumbnails/coconut_flask.svg" alt="Thumbnail for coconut paper">
-                  </a>
-
-                  <h5 class="pub-full-title">
-                    <a href="https://doi.org/xx.xxxx/xxxxx">
-                      Visual Surface Wave Elastography: Revealing Subsurface Physical Properties via Visible Surface
-                      Waves
-                    </a>
-                  </h5>
-
-                  <p class="pub-authors">
-                    <strong>Alexander C. Ogren*</strong>, Berthy T. Feng*, Katherine L. Bouman, Chiara Daraio
-                  </p>
-                </div>
-              </article>
-
-              <article class="pub-card">
-                <div class="pub-row-1">
-                  <span class="pub-simple-title">Visual Vibration Tomography</span>
-                  <span class="pub-journal">CVPR</span>
-                </div>
-
-                <div class="pub-row-2">
-                  <a class="pub-thumbnail" href="paper.pdf" aria-label="Open paper PDF">
-                    <img src="graphics/thumbnails/coconut_flask.svg" alt="Thumbnail for coconut paper">
-                  </a>
-
-                  <h5 class="pub-full-title">
-                    <a href="https://doi.org/xx.xxxx/xxxxx">
-                      Visual Vibration Tomography: Estimating Interior Material Properties from Monocular Video
-                    </a>
-                  </h5>
-
-                  <p class="pub-authors">
-                    Berthy T. Feng,<strong>Alexander C. Ogren</strong>, Katherine L. Bouman, Chiara Daraio
-                  </p>
-                </div>
-              </article> -->
-
-              <ol>
-                <li>A.C. Ogren, B. Zheng, R. Wang, J. Lee, C. Daraio, K. Liu, G.X. Gu, “Data-Driven Methods for
-                  Architected Metamaterials: Data Curation, Property Prediction, and Intelligent Design” (in
-                  preparation).</li>
-                <li>A.C. Ogren, B.T. Feng, K.L. Bouman, C. Daraio, “Visual Surface Wave Tomography: Estimating Interior
-                  Material Properties from Monocular Video” (in preparation).</li>
-                <li>M.V. Bastawrous, Z. Chen, A.C. Ogren, C. Daraio, C. Rudin, L.C. Brinson, “Phononic materials with
-                  effectively scale-separated hierarchical features using interpretable machine learning” (in
-                  preparation).</li>
-                <li>A.C. Ogren, B.T. Feng, K.L. Bouman, C. Daraio, “Gaussian Process Regression as a Surrogate Model for
-                  the Computation of Dispersion Relations,” (2024, <em>Computer Methods in Applied Mechanics and
-                    Engineering</em>) <a href="https://dx.doi.org/10.2139/ssrn.4546650" target="_blank"
-                    rel="noopener">SSRN</a>.</li>
-                <li>B.T. Feng, A.C. Ogren, C. Daraio, K.L. Bouman, “Visual Vibration Tomography: Estimating Interior
-                  Material Properties from Monocular Video,” (2022, <em>CVPR</em> – Best Paper Honorable Mention) <a
-                    href="https://doi.org/10.48550/arXiv.2104.02735" target="_blank" rel="noopener">arXiv</a>.</li>
-                <li>Z. Chen, A.C. Ogren, C. Daraio, L.C. Brinson, C. Rudin, “How to See Hidden Patterns in Metamaterials
-                  with Interpretable Machine Learning,” (2022, <em>Extreme Mechanics Letters</em>) <a
-                    href="https://doi.org/10.48550/arXiv.2111.05949" target="_blank" rel="noopener">arXiv</a>.</li>
-                <li>M. Proestaki, A.C. Ogren, B. Burkel, J. Notbohm, “Modulus of Fibrous Collagen at the Length Scale of
-                  a Cell,” (2019, <em>Experimental Mechanics</em>) <a href="https://doi.org/10.1007/s11340-018-00453-4"
-                    target="_blank" rel="noopener">link</a>.</li>
-              </ol>
             </section>
           </div>
         </div>
@@ -431,6 +352,11 @@
 
   <script type="module">
     import '/js/leaf_sim/leaf_sim.js';
+  </script>
+
+  <script type="module">
+    import { attachSmoothDisclosure } from './js/animations.js';
+    attachSmoothDisclosure(document.querySelector('#filters')); 
   </script>
 
   <script>

@@ -1,15 +1,24 @@
 (() => {
   const $ = (s) => document.querySelector(s);
 
-  const elList   = $('#publications-list');
-  const elSort   = $('#pub-sort');
-  const elReverse    = $('#pub-rev');
+  const elList = $('#publications-list');
+  const elSort = $('#pub-sort');
+  const elReverse = $('#pub-rev');
   const elSearch = $('#pub-search');
-  const elCategories   = $('#pub-cat-wrap');
-  const tpl      = $('#pub-card-tpl');
+  const elKwBar = $('#pub-kwbar');
+  const elKwOps = document.getElementById('kw-ops');
+  const elKwAnd = document.getElementById('kw-op-and');
+  const elKwOr = document.getElementById('kw-op-or');
+  const elKwSummary = document.getElementById('kw-summary');
+
+  const tpl = $('#pub-card-tpl');
+  const activeKws = new Set(); // lower-cased active keywords
+
+  let kwOp = 'or'; // default operator
+
 
   // If this page doesn't have the UI, bail quietly.
-  if (!elList || !elSort || !elReverse || !elSearch || !elCategories || !tpl) return;
+  if (!elList || !elSort || !elReverse || !elSearch || !elKwBar || !tpl) return;
 
   let pubs = [];
 
@@ -32,82 +41,174 @@
   // ---------- HELPERS ----------
   const norm = (s) => (s ?? '').toString().toLowerCase().trim();
   const parseDate = (p) => new Date(p.date || (p.year ? `${p.year}-01-01` : 0));
-  const getCategories = (p) => Array.isArray(p.categories) ? p.categories : (p.category ? [p.category] : []);
+  function toArray(v) {
+    if (Array.isArray(v)) return v.map(s => String(s).trim()).filter(Boolean);
+    if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  }
+
+  function allKeywords(pubs) {
+    // case-insensitive de-dupe, preserve first-seen casing
+    const seen = new Map();
+    for (const p of pubs) {
+      for (const kw of [...toArray(p.keywordsVisible), ...toArray(p.keywordsHidden)]) {
+        const k = kw.toLowerCase();
+        if (!seen.has(k)) seen.set(k, kw);
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }
+
 
   const sorters = {
     'date-desc': (a, b) => parseDate(b) - parseDate(a),
-    'category-asc': (a, b) => (getCategories(a)[0] || '').localeCompare((getCategories(b)[0] || ''), undefined, { sensitivity: 'base' }),
+    'title-asc': (a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }),
   };
+
+  function buildKeywordBar(keywords) {
+    elKwBar.innerHTML = '';
+    for (const label of keywords) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'keyword';
+      btn.textContent = label;
+      const k = norm(label);
+
+      // init pressed state
+      const isActive = activeKws.has(k);
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false'); // for ATs
+
+      btn.addEventListener('click', () => {
+        if (activeKws.has(k)) activeKws.delete(k);
+        else activeKws.add(k);
+        apply();            // re-filter + re-render
+        syncKeywordBar();   // repaint bar states
+      });
+      elKwBar.appendChild(btn);
+    }
+  }
+
+  function syncKeywordBar() {
+    elKwBar.querySelectorAll('button.keyword').forEach(btn => {
+      const k = norm(btn.textContent);
+      const isActive = activeKws.has(k);
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false'); // for ATs
+    });
+  }
 
   function debounce(fn, ms = 150) {
     let id; return (...args) => { clearTimeout(id); id = setTimeout(() => fn(...args), ms); };
   }
 
-  // ---------- UI BUILDERS ----------
-  function buildCategoryFilters(categories) {
-    elCategories.innerHTML = '';
-    if (!categories.length) return;
+  function syncKwOpControls() {
+    if (!elKwAnd || !elKwOr) return;
+    elKwAnd.setAttribute('aria-pressed', kwOp === 'and' ? 'true' : 'false');
+    elKwOr.setAttribute('aria-pressed', kwOp === 'or' ? 'true' : 'false');
+    elKwAnd.classList.toggle('is-active', kwOp === 'and');
+    elKwOr.classList.toggle('is-active', kwOp === 'or');
+  }
 
-    // "All" checkbox
-    const all = document.createElement('label');
-    all.style.display = 'inline-flex'; all.style.gap = '.35rem';
-    const allBox = Object.assign(document.createElement('input'), { type: 'checkbox', id: 'pub-cat-all', checked: true });
-    all.append(allBox, 'All');
-    elCategories.appendChild(all);
+  function updateKwSummary() {
+    if (!elKwSummary) return;
 
-    // Per-category checkboxes
-    for (const cat of categories) {
-      const id = `pub-cat-${cat.replace(/\W+/g,'-')}`;
-      const lab = document.createElement('label');
-      lab.style.display = 'inline-flex'; lab.style.gap = '.35rem';
-      const cb = Object.assign(document.createElement('input'), { type: 'checkbox', value: cat, id });
-      lab.append(cb, cat);
-      elCategories.appendChild(lab);
+    // Pull the visible labels from the kw bar that are currently active
+    const activeLabels = [...elKwBar.querySelectorAll('.keyword[aria-pressed="true"]')]
+      .map(b => b.textContent.trim())
+      .filter(Boolean);
+
+    if (activeLabels.length === 0) {
+      elKwSummary.textContent = 'Showing all publications.';
+      return;
     }
 
-    // Wiring
-    allBox.addEventListener('change', () => {
-      elCategories.querySelectorAll('input[type=checkbox]:not(#pub-cat-all)').forEach(b => b.checked = false);
-      apply();
+    const joiner = kwOp === 'and' ? ' and ' : ' or ';
+    const frag = document.createDocumentFragment();
+
+    // Lead-in text
+    frag.append('Showing publications that pertain to ');
+
+    // Chips + joiners
+    activeLabels.forEach((label, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'keyword kw-badge is-active'; // pill styling + active color
+      chip.textContent = label;
+      frag.append(chip);
+      if (i < activeLabels.length - 1) frag.append(joiner);
     });
-    elCategories.addEventListener('change', (e) => {
-      const t = e.target;
-      if (t instanceof HTMLInputElement && t.type === 'checkbox' && t.id !== 'pub-cat-all') {
-        if (t.checked) $('#pub-cat-all').checked = false;
-        const any = elCategories.querySelectorAll('input[type=checkbox]:not(#pub-cat-all):checked').length > 0;
-        if (!any) $('#pub-cat-all').checked = true;
-        apply();
-      }
-    });
+
+    frag.append('.'); // end punctuation
+    elKwSummary.replaceChildren(frag);
   }
+
+
 
   // ---------- TEMPLATING ----------
   function cardNode(p) {
     const frag = tpl.content.cloneNode(true);
 
     // Row 1
-    const elSimple  = frag.querySelector('.pub-simple-title');
-    const elJournal = frag.querySelector('.pub-journal');
-    elSimple.textContent  = p.shortTitle || p.title || '';
-    elJournal.textContent = p.journalShort || p.journal || '';
+    const elSimple = frag.querySelector('.pub-simple-title');
+    const elJournalShort = frag.querySelector('.pub-journal-short');
+    const elJournalFull = frag.querySelector('.pub-journal-full');
+    elSimple.textContent = p.titleShort || p.title || '';
+    elJournalFull.textContent = p.journal || p.journalShort || '';
+    elJournalShort.textContent = p.journalShort || p.journal || '';
 
     // Row 2
     const linkThumb = frag.querySelector('.pub-thumbnail');
-    const imgThumb  = linkThumb.querySelector('img');
-    const linkFull  = frag.querySelector('.pub-full-title > a');
+    const imgThumb = linkThumb.querySelector('img');
+    const linkFull = frag.querySelector('.pub-full-title > a');
     const elAuthors = frag.querySelector('.pub-authors');
 
     const href = p.pdf || p.url || (p.doi ? `https://doi.org/${p.doi}` : '#');
     linkThumb.href = href;
-    linkThumb.setAttribute('aria-label', `Open ${p.shortTitle || p.title || 'publication'}`);
+    linkThumb.setAttribute('aria-label', `Open ${p.titleShort || p.title || 'publication'}`);
 
     imgThumb.src = p.thumbnail || 'graphics/thumbnails/coconut_flask.svg';
-    imgThumb.alt = `Thumbnail for ${p.shortTitle || p.title || 'publication'}`;
+    imgThumb.alt = `Thumbnail for ${p.titleShort || p.title || 'publication'}`;
 
     linkFull.href = p.doi ? `https://doi.org/${p.doi}` : (p.url || '#');
     linkFull.textContent = p.title || '';
 
     elAuthors.textContent = (p.authors || []).join(', ');
+
+    // Keywords (visible + conditionally show hidden if active)
+    const elKeywords = frag.querySelector('.pub-keywords');
+    const kVis = toArray(p.keywordsVisible);
+    const kHid = toArray(p.keywordsHidden);
+
+    // Show on the card: visible ∪ (hidden ∩ active)
+    const displayKws = [
+      ...kVis,
+      ...kHid.filter(kw => activeKws.has(norm(kw))),
+    ];
+
+    // Build chips
+    if (displayKws.length) {
+      elKeywords.innerHTML = '';
+      for (const label of displayKws) {
+        const k = norm(label);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'keyword';
+        btn.textContent = label;
+        const isActive = activeKws.has(k);
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false'); // for ATs
+        btn.addEventListener('click', () => {
+          if (activeKws.has(k)) activeKws.delete(k); else activeKws.add(k);
+          apply();          // will rebuild this card and others
+          syncKeywordBar(); // keep the top bar in sync
+        });
+        elKeywords.appendChild(btn);
+      }
+      elKeywords.hidden = false;
+    } else {
+      elKeywords.hidden = true;
+    }
+
 
     return frag;
   }
@@ -128,17 +229,29 @@
 
   function apply() {
     const q = norm(elSearch.value);
-    const activeCats = getActiveCategories();
 
-    // filter
     let list = pubs.filter(p => {
+      // free-text haystack
       const hay = [
-        p.title, p.shortTitle, p.journal, p.journalShort,
-        (p.authors || []).join(' '), ...getCategories(p)
-      ].map(norm).join(' | ');
+        p.title, p.titleShort, p.journal, p.journalShort,
+        toArray(p.keywordsVisible), toArray(p.keywordsHidden),
+        (p.authors || []).join(' ')
+      ].flat().map(norm).join(' | ');
+
       const matchesText = q ? hay.includes(q) : true;
-      const matchesCat  = activeCats.length === 0 ? true : getCategories(p).some(c => activeCats.includes(c));
-      return matchesText && matchesCat;
+
+      // keyword filter: accept if none active OR any(pub kw ∩ activeKws)
+      const pubKw = new Set([...toArray(p.keywordsVisible), ...toArray(p.keywordsHidden)].map(norm));
+      let matchesKw = true;
+      if (activeKws.size > 0) {
+        const a = [...activeKws];
+        matchesKw = (kwOp === 'and')
+          ? a.every(k => pubKw.has(k))
+          : a.some(k => pubKw.has(k));
+      }
+
+
+      return matchesText && matchesKw;
     });
 
     // sort (+ optional reverse)
@@ -147,17 +260,16 @@
     if (elReverse.checked) list.reverse();
 
     render(list);
+    syncKeywordBar(); // keep the top bar states in sync with activeKws
+    updateKwSummary();
   }
+
 
   // ---------- BOOT ----------
   (async () => {
     pubs = await loadData();
-
-    // Build category filters from data
-    const uniqueCategories = Array.from(
-      new Set(pubs.flatMap(getCategories).filter(Boolean).map(String))
-    ).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
-    buildCategoryFilters(uniqueCategories);
+    const kws = allKeywords(pubs);   // union of visible+hidden, case-insensitive de-dupe
+    buildKeywordBar(kws);
 
     // Defaults + listeners
     elSort.value = 'date-desc';
@@ -165,6 +277,13 @@
     elSort.addEventListener('change', apply);
     elReverse.addEventListener('change', apply);
     elSearch.addEventListener('input', debounce(apply, 180));
+
+    if (elKwAnd && elKwOr) {
+      elKwAnd.addEventListener('click', () => { kwOp = 'and'; apply(); syncKwOpControls(); });
+      elKwOr.addEventListener('click', () => { kwOp = 'or'; apply(); syncKwOpControls(); });
+      syncKwOpControls();
+    }
+
 
     // First paint
     apply();
