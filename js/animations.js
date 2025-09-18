@@ -39,35 +39,44 @@ export function attachSmoothDisclosure(detailsEl, {
   let animating = false;
 
   summary.addEventListener('click', (e) => {
-    // Intercept default instant toggle to run our animation
+  // If something downstream already canceled (e.g., a control inside summary), do nothing.
+  if (e.defaultPrevented) return;
+
+  // If the click originated on an interactive child inside <summary>,
+  // prevent the native <details> toggle and bail.
+  if (e.target.closest('button, a, input, select, textarea, label, [role="button"], [data-no-toggle]')) {
     e.preventDefault();
-    if (animating) return;
-    animating = true;
+    return;
+  }
 
-    const done = () => { animating = false; };
+  // We’re handling the toggle animation ourselves.
+  e.preventDefault();
+  if (animating) return;
+  animating = true;
 
-    if (detailsEl.open) {
-      // CLOSE: mark UI state now, measure -> collapse -> then actually close
-      detailsEl.dataset.state = 'closed';
-      panel.style.height = panel.scrollHeight + 'px';
-      // force reflow so the browser sees the starting height
-      void panel.getBoundingClientRect();
-      panel.style.height = '0px';
+  const done = () => { animating = false; };
 
-      const onEnd = () => { detailsEl.open = false; done(); };
-      reduceMotion ? onEnd() : panel.addEventListener('transitionend', onEnd, { once: true });
-    } else {
-      // OPEN: set UI state now, open for measurability -> expand -> lock to auto
-      detailsEl.dataset.state = 'open';
-      detailsEl.open = true;
-      panel.style.height = '0px';
-      void panel.getBoundingClientRect();
-      panel.style.height = panel.scrollHeight + 'px';
+  if (detailsEl.open) {
+    // CLOSE
+    detailsEl.dataset.state = 'closed';
+    panel.style.height = panel.scrollHeight + 'px';
+    void panel.getBoundingClientRect(); // force reflow
+    panel.style.height = '0px';
 
-      const onEnd = () => { panel.style.height = 'auto'; done(); };
-      reduceMotion ? onEnd() : panel.addEventListener('transitionend', onEnd, { once: true });
-    }
-  });
+    const onEnd = () => { detailsEl.open = false; done(); };
+    reduceMotion ? onEnd() : panel.addEventListener('transitionend', onEnd, { once: true });
+  } else {
+    // OPEN
+    detailsEl.dataset.state = 'open';
+    detailsEl.open = true;
+    panel.style.height = '0px';
+    void panel.getBoundingClientRect(); // force reflow
+    panel.style.height = panel.scrollHeight + 'px';
+
+    const onEnd = () => { panel.style.height = 'auto'; done(); };
+    reduceMotion ? onEnd() : panel.addEventListener('transitionend', onEnd, { once: true });
+  }
+});
 
   // Expose a small API (useful if inner content height changes while open)
   return {
