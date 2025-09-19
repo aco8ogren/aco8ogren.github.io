@@ -148,8 +148,6 @@ a:focus {
     gap: 1rem;
 }
 
-.pubs .keywords {}
-
 /* One publication card */
 .pub-card {
     display: grid;
