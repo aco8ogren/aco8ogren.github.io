@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-15 22:40:31
+ * @Last Modified time: 2025-09-18 23:38:44
 */
  -->
 <!doctype html>
@@ -70,6 +70,16 @@
             real-world problems.
             On this site you will find information about my talents, projects, education, interests, and more.</p>
           <div class="spacer"></div>
+          <h5>
+            site credits
+          </h5>
+          <p>
+            Scene physics, logic, and artwork hand-rolled by yours truly<br>
+            Photo of me rollerblading taken by Hollywood editor Catherine Goohs<br>
+            Scene rendering by three.js<br>
+            Plot tools from Apache ECharts<br>
+            Math typesetting by MathJax<br>
+          </p>
         </div>
       </div>
     </section>
@@ -346,82 +356,358 @@
         </header>
 
         <div class="page-body scroller edge-fade-x" id="pbs3" data-camera-scroll-source>
-          <h3>
-            These leaves are simulated in real time to follow real physics!
-          </h3>
-          <p>The leaves in the background are a physics-based simulation that I built as a fun way to introduce myself
+          <h2>
+            These leaves follow real aerodynamics, simulated in real time
+          </h2>
+          <p>The falling leaves in the background are a physics-based simulation that I built as a fun way to introduce
+            myself
             to JavaScript.
-            Falling leaves are also a really cool natural example of something seemingly simple that has a lot of really
-            interesting math baked in - and they bring a beautiful ambience to the site!
-            After all, who doesn't love to watch autumn leaves react to otherwise unseen air currents as they fall?</p>
+            Falling leaves are visually simple and elegant, yet represent an intricate mathematical dance happening in
+            the background.
+            Here, you can take a peek behind the curtain to understand a bit more about how one might model this
+            beautiful natural process.
+          </p>
           <div class="nav-row">
             <div class="nav-link">leaf landscape (pure ambience)</div>
             <div class="nav-link">leaf lab (engaging and informative)</div>
           </div>
 
-          <!-- ========== WHAT YOU'RE SEEING ========== -->
-          <section class="copy">
-            <div class="text">
-              <h2>What you’re seeing</h2>
-              <p>Each leaf is a tiny, thin disk drifting through a wind field. The wind is a calm background breeze with
-                short-lived swirls layered on top. Leaves fade out once they wander out-of-bounds, and new ones
-                spawn in to keep the vibe going.</p>
-            </div>
-            
-          </section>
-
-          <!-- ========== SYMBOLS LEGEND (MATH) ========== -->
-          <details class="filters mj" id="legend-mj">
-            <summary class="summary"><span>Show the math: symbols I use</span></summary>
+          <h2>
+            The big picture
+          </h2>
+          <p>
+            In this simulation, each leaf is reacting to wind and gravity.
+            By knowing how fast the surrounding air is moving relative to each leaf, we can determine how the leaf will
+            move and turn over time.
+          </p>
+          <details class="filters mj">
+            <summary class="summary"><span>a more technical overview</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
-                <p>Air density \( \rho\), leaf area \(A = \pi R^2\), center-of-pressure offset \(a_{\mathrm{CoP}}R\).
+                <p>
+                  Each leaf, idealized as a thin disk, responds to wind and gravity.
+                  The air's velocity field is a space-time varying sinusoid combined additively with randomly-spawning
+                  Gaussian-enveloped vortices.
+                  By knowing the relative velocity between each leaf and the surrounding air, we can compute the forces
+                  and moments that act upon each leaf.
+                  From there, we can apply Newton's second law and integrate to propagate the state of each leaf over
+                  time.
+                  When a leaf wanders too far out of bounds, it fades and de-spawns - then spawns a new leaf at the top
+                  of the page.
                 </p>
-                <p>Leaf world state: position \(\mathbf{x}\), velocity \(\mathbf{v}\), quaternion \(q\), unit normal
-                  \(\mathbf{n}\), angular velocity \(\boldsymbol\omega\).</p>
-                <p>Air: background \( \mathbf{u}_{\text{bg}}(\mathbf{x},t)\) and swirls \( \sum_i
-                  \mathbf{u}_i(\mathbf{x},t)\). Relative air speed \(
-                  \mathbf{v}_r=\mathbf{v}-\mathbf{u}(\mathbf{x},t)\), \(V=\|\mathbf{v}_r\|\),
-                  \(\hat{\mathbf{v}}=\mathbf{v}_r/V\), angle \( \theta=\arccos(|\mathbf{n}\cdot\hat{\mathbf{v}}|)\).</p>
               </div>
             </div>
           </details>
+
+          <details class="filters mj">
+            <summary class="summary"><span>symbols, coordinate systems, units, and conventions</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  Except where stated otherwise, everything runs on the
+                  $\left[\text{kg}\cdot\text{m}\cdot\text{s}\right]$ unit system.<br>
+                  $\uvec{i}, \uvec{j}, \uvec{k}$ are unit vectors in the $x, y, z$ directions, respectively<br>
+                  In website space, $\uvec{i}, \uvec{j}, \uvec{k}$ point right, up, and into the page, respectively<br>
+                  Bold symbols such as $\vec{v}$ are vectors<br>
+                  Hatted symbols such as $\uvec{v}$ are unit vectors<br>
+                  $t$ is time<br>
+                  $\mathbf{x} = [x,y,z]$ denote spatial coordinates<br>
+                  $\omega$ is a frequency in $[1/s]$<br>
+                  $\gamma$ is a wavevector (spatial version of frequency) in $[1/m]$<br>
+                  $\propto$ means "proportional to" (i.e. I'm omitting a scaling factor)<br>
+                  $\rho$ signifies density (could be an area density $\left[\text{kg}/\text{m}^2\right]$ or volumetric
+                  density $\left[\text{kg}/\text{m}^3\right]$)
+                </p>
+              </div>
+            </div>
+          </details>
+          <h2>Kinematics</h2>
+          <p class="mj">
+            <!-- Kinematics is the study and description of motion — positions, orientations, velocities, and accelerations of points, particles, and rigid bodies as functions of time — without considering the forces or moments that cause that motion. -->
+            Kinematics is the study and description of motion — positions, orientations, velocities, and accelerations
+            of objects as functions of time.
+            To properly describe how a leaf falls through the breeze, we need to simulate both the linear kinematics
+            (how the leaf is moving in $x, y, z$) and the rotational kinematics (how the leaf flips, spins, and
+            rotates).
+          </p>
+          <!-- <p class="mj">
+            <em>Kinematics</em> is how we describe motion and rotation. For each leaf, we need to describe and model both the linear kinematics (position, velocity, and acceleration — the $x, y, z$ motion) and the rotational kinematics (orientation, angular velocity, and angular acceleration).
+            In general, linear kinematics is a lot more straightforward than rotational kinematics.
+            For this simulation, we track rotational kinematics using <em>quaternions</em>.
+          </p> -->
+          <details class="filters mj" id="kinematics-mj" data-dev-focus data-persist-open>
+            <summary class="summary"><span>show the math: kinematics</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  Linear kinematics are pretty simple in this simulation.
+                  Each leaf has a position, velocity, and acceleration: $\vec{x}_{\text{leaf}}$,
+                  $\vec{v}_{\text{leaf}}$, and $\vec{a}_{\text{leaf}}.$
+                  <!-- Each leaf has a position, velocity, and acceleration. -->
+                </p>
+                <p>
+                  Rotational kinematics typically require a bit more effort to understand — but seeing the leaves rotate
+                  is so worth it!
+                  We use quaternions to track rotational kinematics.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 1: What a quaternion is -->
+          <details class="filters mj" id="quat-defn">
+            <summary class="summary"><span>show the math: quaternion definitions</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  A quaternion is an ordered pair \(q=(w,\vec{q})\in\mathbb{R}\times\mathbb{R}^3\) with scalar part
+                  \(w\) and vector part \(\vec{q}\).
+                  We write the quaternion product as \(\otimes\).
+                </p>
+
+                <p><strong>Addition &amp; scalar multiplication</strong></p>
+                $$ (w_1,\vec{q}_1) + (w_2,\vec{q}_2) = (w_1{+}w_2,\; \vec{q}_1{+}\vec{q}_2),\qquad
+                \alpha(w,\vec{q}) = (\alpha w,\; \alpha\vec{q}). $$
+
+                <p><strong>Hamilton product (non-commutative)</strong></p>
+                $$ (a,\vec{A}) \otimes (b,\vec{B})
+                = \Big(ab - \vec{A}\!\cdot\!\vec{B},\;\; a\,\vec{B} + b\,\vec{A} + \vec{A}\times\vec{B}\Big). $$
+
+                <p><strong>Conjugate, norm, inverse</strong></p>
+                $$ q^*=(w,-\vec{q}),\quad \|q\|^2 = q\otimes q^* = w^2 + \|\vec{q}\|^2,\quad
+                q^{-1} = \frac{q^*}{\|q\|^2}\ \ (q\neq 0). $$
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 2: Unit quaternions & rotations -->
+          <details class="filters mj" id="quat-rot">
+            <summary class="summary"><span>show the math: unit quaternions &amp; rotations</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  A <em>unit quaternion</em> satisfies \(\|q\|=1\). Unit quaternions parametrize 3D rotations; \(q\) and
+                  \(-q\) represent the same rotation (i.e. quaternions double cover of the space of all possible 3D rotations, \(SO(3)\)).
+                </p>
+
+                <p><strong>Rotate a vector by \(q\)</strong></p>
+                <p>Embed \(\vec{v}\in\mathbb{R}^3\) as a pure quaternion \((0,\vec{v})\) and sandwich:</p>
+                $$ \mathcal{R}_q(\vec{v}) \;=\; \big(q \otimes (0,\vec{v}) \otimes q^{-1}\big)_{\text{vector part}}. $$
+
+                <p><strong>Composition order</strong></p>
+                <p>Applying \(q_1\) then \(q_2\) equals \(q_2 \otimes q_1\) (left-acting in the sandwich).</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 5: Angular velocity → quaternion kinematics -->
+          <details class="filters mj" id="quat-kin">
+            <summary class="summary"><span>show the math: angular velocity → quaternion kinematics</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  Let \(\boldsymbol{\omega}\) be angular velocity. The quaternion ODE depends on the frame of
+                  \(\boldsymbol{\omega}\).
+                </p>
+
+                <p><strong>World (inertial) frame angular velocity \(\boldsymbol{\omega}^{\mathrm{W}}\)</strong></p>
+                $$ \dot{q} = \tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{W}})\ \otimes\ q, \qquad
+                q_{t+\Delta t} = \exp\!\Big(\tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{W}})\,\Delta t\Big)\ \otimes\ q_t.
+                $$
+
+                <p><strong>Body (leaf) frame angular velocity \(\boldsymbol{\omega}^{\mathrm{L}}\)</strong></p>
+                $$ \dot{q} = \tfrac12\, q \ \otimes\ (0,\boldsymbol{\omega}^{\mathrm{L}}), \qquad
+                q_{t+\Delta t} = q_t\ \otimes\ \exp\!\Big(\tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{L}})\,\Delta t\Big).
+                $$
+
+                <p><strong>Small-step first-order increment (approx.)</strong></p>
+                $$ \Delta q \approx \big(1,\ \tfrac12\,\boldsymbol{\omega}\,\Delta t\big),\quad
+                q_{t+\Delta t} \approx \Delta q \otimes q_t\ \text{(world)}\ \ \text{or}\ \ q_t \otimes \Delta q\
+                \text{(body)}. $$
+
+                <p class="note">
+                  <em>Numerics:</em> use the exponential form (axis–angle) for finite steps and renormalize \(q\) after
+                  each update to control drift.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="filters mj" id="quat-basics">
+            <summary class="summary"><span>show the math: quaternions</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  A unit quaternion \(q=(w,\vec{q})\in\mathbb{R}\times\mathbb{R}^3\) encodes a 3D rotation:
+                  \(w^2+\|\vec{q}\|^2=1\).
+                  Rotating a vector \(\vec{v}\) by \(q\) is “sandwich” multiplication:
+                </p>
+                $$\mathcal{R}_q(\vec{v}) = q\,(0,\vec{v})\,q^{-1}.$$
+                <p>
+                  For an axis–angle rotation of angle \(\theta\) about unit axis \(\uvec{u}\),
+                </p>
+                $$q(\uvec{u},\theta)=\Big(\cos\tfrac{\theta}{2},\; \uvec{u}\,\sin\tfrac{\theta}{2}\Big).$$
+                <p>
+                  Composition is quaternion product: applying \(q_1\) then \(q_2\) equals \(q_2\otimes q_1\).
+                  The inverse is \(q^{-1}=(w,-\vec{q})\) for unit \(q\).
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="filters mj" id="quat-frames">
+            <summary class="summary"><span>show the math: frames &amp; how \(q\) acts</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  We interpret \(q\) as the rotation that maps leaf-local vectors into world space:
+                  \( {}^{\mathrm{W}}\vec{v}=\mathcal{R}_q\!\left({}^{\mathrm{L}}\vec{v}\right)\).
+                  Conversely, \( {}^{\mathrm{L}}\vec{v}=\mathcal{R}_{q^{-1}}\!\left({}^{\mathrm{W}}\vec{v}\right)\).
+                </p>
+                <p>
+                  In this sim the leaf mesh’s local normal is \( {}^{\mathrm{L}}\uvec{k}=(0,0,1)\).
+                  The world normal is therefore
+                </p>
+                $$\uvec{n} = \mathcal{R}_q\!\big({}^{\mathrm{L}}\uvec{k}\big).$$
+                <p>
+                  When we need an in-plane lever arm for the center of pressure (CoP), we drop the
+                  out-of-plane component in the leaf frame, scale, then rotate back:
+                </p>
+                <ol>
+                  <li>Project \( {}^{\mathrm{L}}\hat{\vec{v}} =
+                    \text{normalize}\!\left(\big[\mathcal{R}_{q^{-1}}(\hat{\vec{v}}_{\mathrm{rel}})\big]_{\parallel\text{leaf}}\right)\).
+                  </li>
+                  <li>\( {}^{\mathrm{L}}\vec{r} = -a_{\mathrm{CoP}}\,R\,{}^{\mathrm{L}}\hat{\vec{v}}\).</li>
+                  <li>\( {}^{\mathrm{W}}\vec{r} = \mathcal{R}_q({}^{\mathrm{L}}\vec{r})\).</li>
+                  <li>\( \boldsymbol{M}_{\mathrm{aero}} = {}^{\mathrm{W}}\vec{r}\times \vec{F}_{\mathrm{aero}}\).</li>
+                </ol>
+              </div>
+            </div>
+          </details>
+
+          <details class="filters mj" id="quat-step">
+            <summary class="summary"><span>show the math: advancing \(q\) with \(\boldsymbol{\omega}\)</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>
+                  Let \(\boldsymbol{\omega}\) be the <em>world-frame</em> angular velocity. Over a small step \(\Delta
+                  t\),
+                  the exact rigid-body update is the exponential map:
+                </p>
+                $$q_{t+\Delta t} = \exp\!\Big(\tfrac12\,\boldsymbol{\omega}_t\,\Delta t\Big)\ \otimes\ q_t.$$
+                <p>
+                  With \(\theta=\|\boldsymbol{\omega}\|\Delta t\) and
+                  \(\uvec{u}=\boldsymbol{\omega}/\|\boldsymbol{\omega}\|\),
+                  the increment is an axis–angle quaternion
+                </p>
+                $$\Delta q=\Big(\cos\tfrac{\theta}{2},\ \uvec{u}\,\sin\tfrac{\theta}{2}\Big),\qquad
+                q_{t+\Delta t}=\text{normalize}\!\big(\Delta q\otimes q_t\big).$$
+                <p>
+                  This matches the implementation: build \(\Delta q\) from the world-axis \(\uvec{u}\), then
+                  <em>premultiply</em>
+                  the current \(q\) and renormalize (to keep \(\|q\|=1\)).
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="filters mj" id="kinematics-stepper">
+            <summary class="summary"><span>show the math: one fixed step</span></summary>
+            <div class="filters-panel">
+              <div class="filter-container">
+                <p>Linear (symplectic Euler):</p>
+                $$\vec{a}=\tfrac{\vec{F}}{m},\quad \vec{v}_{t+\Delta t}=\vec{v}_t+\vec{a}\Delta t,\quad
+                \vec{x}_{t+\Delta t}=\vec{x}_t+\vec{v}_{t+\Delta t}\Delta t.$$
+                <p>Rotational (thin disk, scalar \(I\), world-frame):</p>
+                $$\boldsymbol{\alpha}=\tfrac{\boldsymbol{M}}{I},\quad
+                \boldsymbol{\omega}_{t+\Delta t}=\boldsymbol{\omega}_t+\boldsymbol{\alpha}\Delta t,$$
+                $$q_{t+\Delta t}=\text{normalize}\!\Big(\exp\!\big(\tfrac12\,\boldsymbol{\omega}_{t+\Delta t}\Delta
+                t\big)\otimes q_t\Big),\quad
+                \uvec{n}_{t+\Delta t}=\mathcal{R}_{q_{t+\Delta t}}({}^{\mathrm{L}}\uvec{k}).$$
+                <p>That’s exactly what the code does each substep.</p>
+              </div>
+            </div>
+          </details>
+
+
+
 
           <!-- ========== AERODYNAMICS ========== -->
-          <section class="copy">
-            <div class="text">
-              <h2>Aerodynamics</h2>
-              <p>We approximate a leaf as a thin disk. Face-on to the wind it feels lots of push; edge-on it slices and
-                feels less. We split the aerodynamic force into along-flow (drag) and normal (lift-ish) parts, and apply
-                a small torque from the center-of-pressure being slightly off center.</p>
-            </div>
-            
-          </section>
-
-          <details class="filters mj" id="aero-forces-mj">
-            <summary class="summary"><span>Show the math: forces on a leaf</span></summary>
+          <h2>Aerodynamics</h2>
+          <h3>Wind</h3>
+          <p>
+            Wind is just air that's moving. But in real life, air movement isn't the same everywhere, and it doesn't
+            always move in the same way.
+            The wind in this simulation reflects that real-life variation — it's a function of both space and time.
+          </p>
+          <p class="mj">
+            In this sim, I defined the air velocity as a space-time varying sinusoid $(\vec{v}_{\text{background}})$
+            with
+            randomly-spawning transient vortices $(\vec{v}_{\text{swirl}})$ layered on top.
+          </p>
+          <details class="filters mj" id="wind-mj">
+            <summary class="summary"><span>show the math: air velocity</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
-                <p>Force model (relative flow \( \mathbf{v}_r\)):</p>
-                $$\mathbf{F}_{\mathrm{aero}}
-                = -\tfrac12\,\rho\,A\,V^2\!\left[
-                C_D(\theta)\,\hat{\mathbf{v}}
-                + C_N(\theta)\,\operatorname{sgn}\!\big(\mathbf{n}\!\cdot\!\hat{\mathbf{v}}\big)\,\mathbf{n}
-                \right].$$
-                <p>Angle-dependent coefficients (thin-disk inspired, smooth, cheap to compute):</p>
-                $$C_D(\theta)=C_{d,\parallel}+\big(C_{d,\perp}-C_{d,\parallel}\big)\cos^2\!\theta,\qquad
-                C_N(\theta)=C_{n,\max}\sin(2\theta).$$
-                <p>This matches the implementation: \(C_D\) blends between parallel/perpendicular drag and
-                  \(C_N\propto\sin(2\theta)\); sign comes from \(\mathbf{n}\cdot\hat{\mathbf{v}}\).
+                <p>
+                  The background field is a space-time varying sinusoid:<br>
+                  $$\vec{v}_{\text{background}}(\mathbf{x},t)\propto\sin(2\pi\gamma\,y)\sin(2\pi\omega\,t)\uvec{i}.$$
+                </p>
+                <p>
+                  Each swirl is a Gaussian vortex about the $\uvec{k}$-axis, with on-off behavior modulated by smoothed
+                  heaviside envelopes:
+                  $$\vec{v}_{\text{swirl}}(\mathbf{x},t)\propto e^{-\tfrac12(r/R)^2}\operatorname{env}(t)\uvec{\phi},
+                  \quad\uvec{\phi}=\uvec{k}\times\uvec{r}.$$
+                  where
+                  $\operatorname{env}(t,t_{0},t_{1}) = \operatorname{H_{s,2}}(t-t_{0})\operatorname{H_{s,2}}(t_{1} - t)$
+                  turns the vortex on and off with a smoothed heaviside function at times $t_{0}$ and $t_{1}$
+                  respectively.
+                  Here, position vector $\vec{r} = \vec{x}-\vec{x_{\text{swirl}}}$, where $\vec{x_{\text{swirl}}}$ is
+                  the center of
+                  the swirl.
+                  Distance from the swirl center is $r = \norm{\vec{r}}$.
+                  Radial size variable $R$ scales the spatial size of the swirl.
+                </p>
+                <p>
+                  The total velocity field is the background field, plus any existing swirls:
+                  $$\vec{v}_{\text{air}}(\vec{x},t) = \vec{v}_{\text{background}}(\vec{x},t) +
+                  \sum_{\text{swirls}}{\vec{v}_{\text{swirl}}(\vec{x},t)}.$$
                 </p>
               </div>
             </div>
           </details>
+          <h3>Leaves</h3>
+          <p class="mj">
+            The <em>relative</em> ambient air velocity dictates how each leaf will move.
+            If a leaf is already moving the same way as the surrounding air, it'll just continue to go with the flow —
+            no extra effect from the wind.
+            If not, the wind will encourage the leaf to change what it's doing, causing it to drift, lift, float, and
+            tumble.
+          </p>
 
-          <details class="filters mj" id="aero-moment-mj">
-            <summary class="summary"><span>Show the math: aerodynamic moment</span></summary>
+          <details class="filters mj" id="aero-forces-mj">
+            <summary class="summary"><span>show the math: forces on a leaf</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
+                <p>
+                  The relative velocity between the air and each leaf is computed as:
+                </p>
+                $$\vec{v}_{\text{rel}} = \vec{v_{\text{air}}} - \vec{v_{\text{leaf}}}$$
+                <p>
+                  By idealizing each leaf as a thin disk, we can compute the aerodynamic forces and moments
+                  analytically.
+                  The aerodynamic force is computed as:
+                </p>
+                $$\vec{F}_{\mathrm{aero}}
+                = -\frac{1}{2}\,\rho_{\text{air}}\,A_{\text{leaf}}\,\norm{\vec{v}_{\text{rel}}}^2\!\left[
+                C_D(\theta)\,\uvec{v}_{\text{rel}}
+                +
+                C_N(\theta)\,\operatorname{sgn}\!\big(\uvec{n}_{\text{leaf}}\!\cdot\!\uvec{v}_{\text{rel}}\big)\,\uvec{n}_{\text{leaf}}
+                \right].$$
+                <p>The coefficients of drag depend on the angle $\theta$ between the relative velocity
+                  $(\uvec{v}_{\text{rel}})$ and the leaf normal $(\uvec{n}_{\text{leaf}})$:</p>
+                $$C_D(\theta)=C_{d,\parallel}+\big(C_{d,\perp}-C_{d,\parallel}\big)\cos^2\!\theta,\qquad
+                C_N(\theta)=C_{N,\max}\sin(2\theta).$$
                 <p>We offset the center of pressure a small fraction of the radius along the in-plane flow direction,
                   then take a cross product:</p>
                 <ol>
@@ -431,7 +717,6 @@
                   <li>Rotate back to world: \(\mathbf{r} = q\,\mathbf{r}_{\text{local}}\).</li>
                   <li>\(\boldsymbol{M}_{\mathrm{aero}} = \mathbf{r}\times \mathbf{F}_{\mathrm{aero}}\).</li>
                 </ol>
-                <p>Exactly how the code builds the moment arm and moment.</p>
               </div>
             </div>
           </details>
@@ -443,11 +728,11 @@
               <p>For every leaf, forces update velocity; torques update spin. I use a small fixed time step and a
                 symplectic Euler update so it behaves consistently across frame rates.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="integration-mj">
-            <summary class="summary"><span>Show the math: symplectic Euler + quaternion update</span></summary>
+            <summary class="summary"><span>show the math: symplectic Euler + quaternion update</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Linear:</p>
@@ -471,11 +756,11 @@
               <p>The breeze is the sum of a gentle background that varies with height and time, plus short-lived swirls
                 (little eddies) that ease in, drift, and ease out.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="wind-bg-mj">
-            <summary class="summary"><span>Show the math: background breeze</span></summary>
+            <summary class="summary"><span>show the math: background breeze</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>I use a simple separable field along \(x\):</p>
@@ -486,7 +771,7 @@
           </details>
 
           <details class="filters mj" id="wind-swirl-mj">
-            <summary class="summary"><span>Show the math: localized swirls</span></summary>
+            <summary class="summary"><span>show the math: localized swirls</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Each swirl is a Gaussian vortex around axis \(\hat{\mathbf{k}}\) with a smooth life envelope:</p>
@@ -495,7 +780,7 @@
                 \hat{\mathbf{t}}=\hat{\mathbf{k}}\times\hat{\mathbf{r}}_{\perp}.$$
                 <p>Envelope \( \ell(t)\in[0,1]\) rises and falls via a smoothstep-like polynomial, so swirls
                   appear/disappear without pops. That matches the implemented <code>flc2hs</code> and the swirl
-                  <code>tick()</code>. 
+                  <code>tick()</code>.
                 </p>
               </div>
             </div>
@@ -508,11 +793,11 @@
               <p>I aim for a comfy number of leaves. When a leaf drifts outside a padded border, it fades out and
                 respawns near the top. New leaves arrive via a Poisson process that scales with the current deficit.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="spawn-mj">
-            <summary class="summary"><span>Show the math: spawn rate &amp; fade</span></summary>
+            <summary class="summary"><span>show the math: spawn rate &amp; fade</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Let \(N_{\max}\) be the target count and \(N\) current. Occupancy deficit
@@ -537,11 +822,11 @@
               <p>Randomized: initial position (with top-heavy respawns), orientation, mesh choice, color family, and
                 swirl sizes/speeds/lifetimes. Enough variation to feel natural, without chaos.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="random-mj">
-            <summary class="summary"><span>Show the math: distributions used</span></summary>
+            <summary class="summary"><span>show the math: distributions used</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <ul>
@@ -549,7 +834,7 @@
                   <li>Orientation: random unit vector for the normal; quaternion set from
                     \(\hat{\mathbf{z}}\to\mathbf{n}\).</li>
                   <li>Swirl \(R,U_0,\text{duration}\): linear interpolation between min/max with uniform \(u\in[0,1]\).
-                    </li>
+                  </li>
                   <li>Mesh &amp; palette: random pick from loaded GLBs and material banks. </li>
                 </ul>
               </div>
@@ -563,11 +848,11 @@
               <p>Three.js scene with warm sunset lighting and exponential fog so the horizon melts into the page. Leaves
                 are thin, double-sided, transparent materials with depth-write off to play nice in a crowd.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="render-mj">
-            <summary class="summary"><span>Show the math: fog at a glance</span></summary>
+            <summary class="summary"><span>show the math: fog at a glance</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Exponential fog roughly scales as \(e^{-\beta z}\) (I use <code>FogExp2</code>). That’s enough to
@@ -583,11 +868,11 @@
               <p>The camera gently follows your scrolling: horizontal and vertical scrollers map to a pan window over
                 the simulated space. Movement eases with a simple first-order lag, so it feels calm.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="camera-mj">
-            <summary class="summary"><span>Show the math: scroll → camera &amp; damping</span></summary>
+            <summary class="summary"><span>show the math: scroll → camera &amp; damping</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Scroll progress \(p_x,p_y\in[0,1]\) maps into a pan window
@@ -612,11 +897,11 @@
                 is an instanced grid; the HUD prints live stats. (I keep these off by default so the first impression
                 stays clean.)</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="quiver-mj">
-            <summary class="summary"><span>Show the math: quiver sampling</span></summary>
+            <summary class="summary"><span>show the math: quiver sampling</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>Uniform grid of \(n_x\times n_y\) points; at each base \(\mathbf{p}_{ij}\) the arrow length is \(
@@ -634,11 +919,11 @@
               <p>Leaves start as SVGs. I triangulate them (ear-clipping), export OBJ/GLB, and load them once. Each
                 spawned leaf instantiates shared geometry with a fresh material from a seasonal palette.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="art-mj">
-            <summary class="summary"><span>Show the math: triangulation sketch</span></summary>
+            <summary class="summary"><span>show the math: triangulation sketch</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>For a simple polygon \(P\), ear-clipping removes convex “ears” \( (v_{i-1},v_i,v_{i+1})\) that
@@ -656,11 +941,11 @@
                 honor reduced motion; charts are throttled. Materials share geometry and most textures; leaf fades avoid
                 expensive object churn.</p>
             </div>
-            
+
           </section>
 
           <details class="filters mj" id="perf-mj">
-            <summary class="summary"><span>Show the math: fixed-step loop</span></summary>
+            <summary class="summary"><span>show the math: fixed-step loop</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>With step \( \Delta t \) and frame time \( \delta\), accumulate \(a\leftarrow a+\delta\); do
@@ -677,7 +962,7 @@
               <p>Three.js for rendering, ECharts for lightweight plots, MathJax for equations. Everything else—physics,
                 wind field, camera mapping, artwork pipeline—is hand-rolled because that’s the fun part. 🙂</p>
             </div>
-            
+
           </section>
 
 
@@ -686,7 +971,7 @@
           <!-- EXACT same structure/styles as resume “filters” details -->
           <details class="filters mj" id="leaf-mj" open>
             <summary class="summary">
-              <span>Show the math: forces &amp; moments on a leaf</span>
+              <span>show the math: forces &amp; moments on a leaf</span>
             </summary>
 
             <div class="filters-panel">
@@ -760,6 +1045,24 @@
   </script>
 
   <script type="module">
+    import { persistDevState, devFocus } from './js/dev-persist.js';
+
+    persistDevState({
+      scroll: [
+        'window',          // keep main window scroll (if you ever scroll the page)
+        '#page-strip',     // your horizontal strip
+        '.page .scroller', // the vertical scrollers inside each page
+      ],
+      detailsRoots: ['body'] // look for <details data-persist-open> anywhere
+    });
+
+    // Optional: set once in the console to make every reload jump to your target:
+    // devFocus.save('[data-dev-focus]');
+    // (or just add data-dev-focus to a single element in the area you’re working on)
+  </script>
+
+
+  <script type="module">
     import '/js/leaf_sim/leaf_sim.js';
   </script>
 
@@ -775,9 +1078,13 @@
 
     const ctrls = [];
 
-    // 1) Typeset + wire every math details block
-    for (const d of document.querySelectorAll('details.filters.mj')) {
+    // Typeset
+    for (const d of document.querySelectorAll('.mj')) {
       await typeset(d);                 // lay out math so heights are accurate
+    }
+
+    // Wire details animation
+    for (const d of document.querySelectorAll('details.filters')) {
       const ctl = attachSmoothDisclosure(d);
       if (ctl) { ctl.recalc(); ctrls.push(ctl); }
     }
