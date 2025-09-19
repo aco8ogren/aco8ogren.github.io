@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-10 13:59:20
+ * @Last Modified time: 2025-09-15 21:43:31
  */
 
 import * as THREE from 'three';
@@ -33,8 +33,6 @@ await leafModelBank.prepareMany([
     './js/leaf_sim/graphics/build/maple_leaf_2.glb',
     './js/leaf_sim/graphics/build/maple_leaf_3.glb',
 ]);
-
-console.log('imports successful');
 
 /* -------------------- INPUT -------------------- */
 let domain_wire = null;
@@ -265,13 +263,13 @@ scene.fog = new THREE.FogExp2(fogColor, 0.00025);
 // intensity: ~1.2 to make it pop
 const light_color = 0xFFB266; // orange
 // const light_color = 0x332211;
-const sunLight = new THREE.DirectionalLight(light_color, .64);
+const sunLight = new THREE.DirectionalLight(light_color, .88); // 0.64
 sunLight.position.set(0.9 * domain.L.x, 1.1 * domain.L.y, -0.5 * domain.L.z);
 sunLight.target.position.set(0, 0, L.z);
 scene.add(sunLight);
 scene.add(sunLight.target);
 
-scene.add(new THREE.AmbientLight(light_color, 0.96));
+scene.add(new THREE.AmbientLight(light_color, 1.28)); // 0.96
 
 // // --- Postprocessing: Depth of Field ---
 // const composer = new EffectComposer(renderer);
@@ -318,11 +316,9 @@ const scrollers = pages.map(scrollerFor);
 view.setPanDir({ x: -1, y: -1 });
 
 // Set scroll sources
-console.log(cam.position.y)
 view.setScrollSource({ x: strip, y: scrollers });
 view._updateTargetFromScroll();
 view.cam.position.copy(view._target);
-console.log(cam.position.y)
 
 // plot
 const YPositionPlotEl = document.getElementById('cam-plot');
@@ -704,5 +700,3 @@ function loop(now_ms) {
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-
-console.log('leaf_sim running; leaves:', leaves.length);

@@ -6,7 +6,6 @@ export function initCamYPositionPlot(domId = 'cam-plot') {
   const el = document.getElementById(domId);
   if (!el) { console.warn(`[cam plot] #${domId} not found`); return null; }
   if (el.clientWidth === 0 || el.clientHeight === 0) {
-    console.log(`[echarts] ${domId} has zero size; aborting init`);
     return null;
   }
 
@@ -62,7 +61,6 @@ export function initLeafDensityPlot(domId = 'density-plot', nx = 36, ny = 18, do
   const el = document.getElementById(domId);
   if (!el) { console.warn(`[density plot] #${domId} not found`); return null; }
   if (el.clientWidth === 0 || el.clientHeight === 0) {
-    console.log(`[echarts] ${domId} has zero size; aborting init`);
     return null;
   }
 
