@@ -22,12 +22,12 @@ dist/
 .DS_Store
 .vscode/
 
-graphics/thumbnails/modulus_of_collagen/src/
+/graphics/thumbnails/modulus_of_collagen/src/
 
-graphics/thumbnails/vswe/build/teaser_4_thumbnail_v2_small Report.txt
+/graphics/thumbnails/vswe/build/teaser_4_thumbnail_v2_small Report.txt
 
-graphics/thumbnails/vswe/old/
+/graphics/thumbnails/vswe/old/
 
-graphics/thumbnails/
+/graphics/thumbnails/
 
-graphics/
+/graphics/
