@@ -1,3 +1,9 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-09-19 19:29:02 
+ * @Last Modified by:   alex 
+ * @Last Modified time: 2025-09-19 19:29:02 
+ */
 // js/util.js
 
 // Clone a <template> block N times into a target container

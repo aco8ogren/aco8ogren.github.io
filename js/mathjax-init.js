@@ -1,8 +1,8 @@
 /*
  * @Author: alex 
  * @Date: 2025-09-18 22:26:30 
- * @Last Modified by:   alex 
- * @Last Modified time: 2025-09-18 22:26:30 
+ * @Last Modified by: alex
+ * @Last Modified time: 2025-09-19 19:28:40
  */
 // js/mathjax-init.js — Vite + MathJax v4 (bundled), boldsymbol loaded in startup.ready
 export async function setupMathJax() {

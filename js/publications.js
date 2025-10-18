@@ -1,3 +1,9 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-09-19 19:28:04 
+ * @Last Modified by: alex
+ * @Last Modified time: 2025-09-20 19:41:46
+ */
 (() => {
   const $ = (s) => document.querySelector(s);
 
@@ -183,14 +189,42 @@
     elJournalShort.textContent = p.journalShort || p.journal || '';
 
     // Row 2
-    const linkThumb = frag.querySelector('.pub-thumbnail');
-    const imgThumb = linkThumb.querySelector('img');
+    // const linkThumb = frag.querySelector('.pub-thumbnail');
+    // const imgThumb = linkThumb.querySelector('img');
     const linkFull = frag.querySelector('.pub-full-title > a');
     const elAuthors = frag.querySelector('.pub-authors');
 
+    // const href = p.pdf || p.url || (p.doi ? `https://doi.org/${p.doi}` : '#');
+    // linkThumb.href = href;
+    // linkThumb.setAttribute('aria-label', `Open ${p.titleShort || p.title || 'publication'}`);
+
+    const linkThumb = frag.querySelector('.pub-thumbnail');
+    const imgThumb = linkThumb.querySelector('img');
+    const objThumb = linkThumb.querySelector('object');
+
+    const thumb = p.thumbnail || 'graphics/thumbnails/coconut_flask.svg';
+    const isSvg = /\.svg(\?.*)?$/i.test(thumb);
+
+    // Link + ARIA (unchanged)
     const href = p.pdf || p.url || (p.doi ? `https://doi.org/${p.doi}` : '#');
     linkThumb.href = href;
     linkThumb.setAttribute('aria-label', `Open ${p.titleShort || p.title || 'publication'}`);
+
+    if (isSvg) {
+      // show <object>, hide <img>
+      objThumb.data = thumb;                 // <-- not "src"
+      objThumb.type = 'image/svg+xml';
+      // optional fallback content for accessibility:
+      objThumb.innerHTML = `<img alt="Thumbnail for ${p.titleShort || p.title || 'publication'}">`;
+      objThumb.hidden = false;
+      imgThumb.hidden = true;
+    } else {
+      // show <img>, hide <object>
+      imgThumb.src = thumb;
+      imgThumb.alt = `Thumbnail for ${p.titleShort || p.title || 'publication'}`;
+      imgThumb.hidden = false;
+      objThumb.hidden = true;
+    }
 
     imgThumb.src = p.thumbnail || 'graphics/thumbnails/coconut_flask.svg';
     imgThumb.alt = `Thumbnail for ${p.titleShort || p.title || 'publication'}`;

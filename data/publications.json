@@ -64,7 +64,7 @@
     "doi": "",
     "url": "",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
+    "thumbnail": "/graphics/vswe/thumbnail/teaser.svg"
   },
   {
     "id": "phononics-hierarchical",
@@ -232,6 +232,6 @@
     "doi": "10.1007/s11340-018-00453-4",
     "url": "https://doi.org/10.1007/s11340-018-00453-4",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/modulus_of_collagen.jpg"
+    "thumbnail": "/graphics/modulus_of_collagen/thumbnail/modulus_of_collagen_ps.png"
   }
 ]

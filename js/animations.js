@@ -1,3 +1,9 @@
+/*
+ * @Author: alex 
+ * @Date: 2025-09-19 19:28:19 
+ * @Last Modified by:   alex 
+ * @Last Modified time: 2025-09-19 19:28:19 
+ */
 // animations.js
 // Smoothly animate <details> open/close using a height transition.
 // Works for ANY details; will auto-wrap content into a single panel if needed.

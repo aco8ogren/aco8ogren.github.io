@@ -9,3 +9,5 @@
 js/leaf_sim/graphics/build/* filter=lfs diff=lfs merge=lfs -text
 graphics/github-mark-current-color.svg filter=lfs diff=lfs merge=lfs -text
 *.pdf filter=lfs diff=lfs merge=lfs -text
+graphics/thumbnails/modulus_of_collagen/build/modulus_of_collagen_ps.png filter=lfs diff=lfs merge=lfs -text
+graphics/thumbnails/modulus_of_collagen/src/modulus_of_collagen.jpg filter=lfs diff=lfs merge=lfs -text
