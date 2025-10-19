@@ -2,7 +2,7 @@
  * @Author: alex 
  * @Date: 2025-09-18 22:26:30 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-19 19:28:40
+ * @Last Modified time: 2025-10-18 18:30:40
  */
 // js/mathjax-init.js — Vite + MathJax v4 (bundled), boldsymbol loaded in startup.ready
 export async function setupMathJax() {
@@ -27,6 +27,8 @@ export async function setupMathJax() {
             macros: {
                 vec: ['\\mathbf{#1}', 1],
                 uvec: ['\\hat{\\mathbf{#1}}', 1],
+                symvec: ['\\boldsymbol{#1}', 1],
+                symuvec: ['\\hat{\\boldsymbol{#1}}', 1],
                 norm: ['\\left\\lVert #1 \\right\\rVert', 1],          // \norm{x} → ‖x‖
                 normp: ['\\left\\lVert #1 \\right\\rVert_{#2}', 2]     // \normp{x}{p} → ‖x‖ₚ
             }

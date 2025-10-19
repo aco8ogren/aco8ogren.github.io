@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-20 20:02:31
+ * @Last Modified time: 2025-10-18 18:51:41
 */
  -->
 <!doctype html>
@@ -72,22 +72,28 @@
             On this site you will find information about my talents, projects, education, interests, and more.
           </p> -->
           <p style="text-align: justify">
-            I'm a math-minded engineer, motivated by weaving together concepts from different fields to produce novel, impactful solutions to
+            I'm a math-minded engineer, motivated by weaving together concepts from different fields to produce novel,
+            impactful solutions to
             real-world problems.
-            My PhD focused 
+            My PhD focused on applying computer vision, machine learning, and inference to elastodynamic problems.
             On this site you will find information about my talents, projects, education, interests, and more.
           </p>
           <div class="spacer"></div>
-          <h5>
-            site credits
-          </h5>
-          <p>
-            Scene physics, logic, and artwork hand-rolled by yours truly<br>
-            Photo of me rollerblading taken by Hollywood editor Catherine Goohs<br>
-            InkScape for creating artwork<br>
-            Scene rendering by three.js<br>
-            Plot tools from Apache ECharts<br>
-            Math typesetting by MathJax<br>
+          <h3>
+            Site credits
+          </h3>
+          <p class="comfy-spacing">
+            Scene physics, logic, and artwork hand-rolled by yours truly.<br>
+            Photo of me rollerblading taken by Catherine Goohs.<br>
+          </p>
+          <h4>
+            Tools
+          </h4>
+          <p class="comfy-spacing">
+            Inkscape used for creating leaf art.<br>
+            Three.js used for scene rendering.<br>
+            Apache ECharts used to make plots.<br>
+            MathJax used for math typesetting.<br>
           </p>
         </div>
       </div>
@@ -136,7 +142,7 @@
                 <span class="location only-mobile">Madison, WI</span>
                 <!-- <span class="position">BS Engineering Mechanics<span class="only-desktop">; </span><br class="only-mobile">BS Mathematics</span> -->
                 <span class="position">B.S. Engineering Mechanics<br>B.S. Mathematics</span>
-                <time datetime="2024-05" class="date-range">May 2018</time>
+                <time datetime="2018-05" class="date-range">May 2018</time>
               </p>
             </section>
 
@@ -152,8 +158,8 @@
                 </strong>
                 <span class="location only-desktop">Pasadena, California</span>
                 <span class="location only-mobile">Pasadena, CA</span>
-                <span class="position only-desktop">Post-doctoral Scholar</span>
-                <span class="position only-mobile">Post-doc</span>
+                <span class="position only-desktop">Postdoctoral Scholar</span>
+                <span class="position only-mobile">Postdoc</span>
                 <span class="date-range">
                   <time datetime="2024-05">May</time> – <time datetime="2024-12">Dec 2024</time>
                 </span>
@@ -386,8 +392,8 @@
             Setting the scene
           </h2>
           <p>
-            In this simulation, each leaf is reacting to wind and gravity.
-            By considering how the air flows past each leaf, we can determine how the leaf will
+            In this simulation, each individual leaf is reacting to wind and gravity.
+            By considering how the air flows past a leaf, we can determine how the leaf will
             drift and tumble.
           </p>
 
@@ -412,7 +418,7 @@
                   time.
                 </p>
                 <p>
-                  When a leaf wanders too far out of bounds, it fades and de-spawns, increasing the probability that a
+                  When a leaf wanders too far out of bounds, it fades and despawns, increasing the probability that a
                   new leaf will spawn near the top of the domain.
                 </p>
               </div>
@@ -428,10 +434,10 @@
                   $\left[\text{kg}\cdot\text{m}\cdot\text{s}\right]$ unit system.<br>
                   $\uvec{i}, \uvec{j}, \uvec{k}$ are unit vectors in the $x, y, z$ directions, respectively<br>
                   In website space, $\uvec{i}, \uvec{j}, \uvec{k}$ point right, up, and into the page, respectively<br>
-                  Bold symbols such as $\vec{v}$ are vectors<br>
+                  Bold symbols such as $\vec{v}$ are vectors in $\mathbb{R}^3$<br>
                   Hatted symbols such as $\uvec{v}$ are unit vectors<br>
                   $t$ is time<br>
-                  $\mathbf{x} = [x,y,z]$ denote spatial coordinates<br>
+                  $\vec{x} = [x,y,z]$ denotes spatial coordinates<br>
                   $\omega$ is a frequency in $[1/s]$<br>
                   $\gamma$ is a wavevector (spatial version of frequency) in $[1/m]$<br>
                   $\propto$ means "proportional to" (i.e. I'm omitting a scaling factor)<br>
@@ -450,11 +456,6 @@
             (how the leaf is moving in $x, y, z$) and the rotational kinematics (how the leaf flips, spins, and
             rotates).
           </p>
-          <!-- <p class="mj">
-            <em>Kinematics</em> is how we describe motion and rotation. For each leaf, we need to describe and model both the linear kinematics (position, velocity, and acceleration — the $x, y, z$ motion) and the rotational kinematics (orientation, angular velocity, and angular acceleration).
-            In general, linear kinematics is a lot more straightforward than rotational kinematics.
-            For this simulation, we track rotational kinematics using <em>quaternions</em>.
-          </p> -->
           <details class="filters mj" id="kinematics-mj">
             <summary class="summary"><span>show the math: kinematics</span></summary>
             <div class="filters-panel">
@@ -468,8 +469,8 @@
                   My simulation uses symplectic Euler for this.
                 </p>
                 <p>
-                  Rotational kinematics typically require a bit more effort to understand because rotations live on the
-                  manifold $SO(3)$ — meaning they do <em>not</em> compose through addition (i.e.
+                  Rotational kinematics are not as simple to model because rotations do <em>not</em> compose through
+                  addition (i.e.
                   $\,\boldsymbol{\theta}_{t+\Delta
                   t}\leftarrow \boldsymbol{\theta}_t+\boldsymbol{\omega}\Delta t\,$ doesn't work).
                   Instead, we need to represent rotations and track orientations with quaternions, which live in
@@ -481,78 +482,55 @@
             </div>
           </details>
 
-          <!-- Section 1: What a quaternion is -->
-          <details class="filters mj" id="quat-defn">
-            <summary class="summary"><span>show the math: quaternion definitions</span></summary>
+          <details class="filters mj" id="quaternion-details">
+            <summary class="summary"><span>show the math: quaternions</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
+                <p>
+                  My sim uses quaternions for rotation math.
+                </p>
                 <p>
                   A quaternion is an ordered pair \(q=(w,\vec{q})\in\mathbb{R}\times\mathbb{R}^3\) with scalar part
                   \(w\) and vector part \(\vec{q}\).
                   We write the quaternion product as \(\otimes\).
                 </p>
-
-                <p><strong>Addition &amp; scalar multiplication</strong></p>
-                $$ (w_1,\vec{q}_1) + (w_2,\vec{q}_2) = (w_1{+}w_2,\; \vec{q}_1{+}\vec{q}_2),\\
-                \alpha(w,\vec{q}) = (\alpha w,\; \alpha\vec{q}). $$
-
-                <p><strong>Hamilton product (non-commutative)</strong></p>
                 $$ (a,\vec{A}) \otimes (b,\vec{B})
                 = \Big(ab - \vec{A}\!\cdot\!\vec{B},\;\; a\,\vec{B} + b\,\vec{A} + \vec{A}\times\vec{B}\Big). $$
-
-                <p><strong>Conjugate, norm, inverse</strong></p>
-                $$ q^*=(w,-\vec{q}),\quad \|q\|^2 = q\otimes q^* = w^2 + \|\vec{q}\|^2,\quad
-                q^{-1} = \frac{q^*}{\|q\|^2}\ \ (q\neq 0). $$
-              </div>
-            </div>
-          </details>
-
-          <!-- Section 2: Unit quaternions & rotations -->
-          <details class="filters mj" id="quat-rot">
-            <summary class="summary"><span>show the math: unit quaternions &amp; rotations</span></summary>
-            <div class="filters-panel">
-              <div class="filter-container">
                 <p>
-                  A <em>unit quaternion</em> satisfies \(\|q\|=1\). Unit quaternions parametrize 3D rotations.
+                  A <em>unit quaternion</em> satisfies $q \otimes q^{*} = (\|q\|^{2},\,\vec{0}) = (1,\,\vec{0})$.
+                  Unit quaternions parametrize 3D rotations.
                   To rotate a vector $\vec{v}$ by quaternion $\vec{q}$, we embed \(\vec{v}\in\mathbb{R}^3\) as a pure
                   quaternion \((0,\vec{v})\) and sandwich multiply:
                   $$\mathcal{R}_q(\vec{v}) \;=\; \big(q \otimes (0,\vec{v}) \otimes q^{-1}\big)$$
                   where, since the result is a quaternion in $\mathbb{R}\times\mathbb{R}^3$, we take only the vector
-                  part
-                  as the result of the rotation.
+                  part as the result of the rotation.
                 </p>
               </div>
             </div>
           </details>
 
-          <!-- Section 5: Angular velocity → quaternion kinematics -->
-          <details class="filters mj" id="quat-kin">
-            <summary class="summary"><span>show the math: time-stepping quaternion kinematics</span></summary>
+          <details class="filters mj" id="quaternion-time-stepping-details">
+            <summary class="summary"><span>show the math: time-stepping with quaternions</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
                 <p>
-                  Let \(\boldsymbol{\omega}\) be angular velocity. The quaternion ODE depends on the frame of
-                  \(\boldsymbol{\omega}\).
+                  We express angular acceleration $\alpha$ and angular velocity $\omega$ in the <em>inertial</em> frame
+                  (as opposed to the <em>local</em> frame),
+                  and our
+                  quaternion \(q\) maps local→world.
                 </p>
 
-                <p><strong>World (inertial) frame angular velocity \(\boldsymbol{\omega}^{\mathrm{W}}\)</strong></p>
-                $$ \dot{q} = \tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{W}})\ \otimes\ q, \qquad
-                q_{t+\Delta t} = \exp\!\Big(\tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{W}})\,\Delta t\Big)\ \otimes\ q_t.
-                $$
-
-                <p><strong>Body (leaf) frame angular velocity \(\boldsymbol{\omega}^{\mathrm{L}}\)</strong></p>
-                $$ \dot{q} = \tfrac12\, q \ \otimes\ (0,\boldsymbol{\omega}^{\mathrm{L}}), \qquad
-                q_{t+\Delta t} = q_t\ \otimes\ \exp\!\Big(\tfrac12\,(0,\boldsymbol{\omega}^{\mathrm{L}})\,\Delta t\Big).
-                $$
-
-                <p><strong>Small-step first-order increment (approx.)</strong></p>
-                $$ \Delta q \approx \big(1,\ \tfrac12\,\boldsymbol{\omega}\,\Delta t\big),\quad
-                q_{t+\Delta t} \approx \Delta q \otimes q_t\ \text{(world)}\ \ \text{or}\ \ q_t \otimes \Delta q\
-                \text{(body)}. $$
-
-                <p class="note">
-                  <em>Numerics:</em> use the exponential form (axis–angle) for finite steps and renormalize \(q\) after
-                  each update to control drift.
+                <p class="mj">
+                  We integrate angular velocity by treating it as constant over each small step.
+                  The kinematic ODE
+                  \[
+                  \dot q=\tfrac12\,(0,\boldsymbol{\omega})\otimes q
+                  \]
+                  has the per-step solution
+                  \[
+                  q_{n+1}=\underbrace{\exp\!\big(\tfrac12(0,\boldsymbol{\omega}_{n+1})\Delta t\big)}_{\text{unit quaternion with axis }\hat{\boldsymbol{\omega}}_{n+1}\text{, and angle }\|\boldsymbol{\omega}_{n+1}\|\Delta t}\ \otimes\ q_n.
+                  \]
+                  This update rule can be read more simply as $q\leftarrow dq\otimes q$.
                 </p>
               </div>
             </div>
@@ -584,12 +562,12 @@
                 </p>
                 <p>
                   Each swirl is a Gaussian vortex about the $\uvec{k}$-axis, with on-off behavior modulated by smoothed
-                  heaviside envelopes:
-                  $$\vec{v}_{\text{swirl}}(\mathbf{x},t)\propto e^{-\tfrac12(r/R)^2}\operatorname{env}(t)\uvec{\phi},
-                  \quad\uvec{\phi}=\uvec{k}\times\uvec{r}.$$
+                  Heaviside envelopes:
+                  $$\vec{v}_{\text{swirl}}(\mathbf{x},t)\propto e^{-\tfrac12(r/R)^2}\operatorname{env}(t)\symuvec{\phi},
+                  \quad\symuvec{\phi}=\uvec{k}\times\uvec{r}.$$
                   where
                   $\operatorname{env}(t,t_{0},t_{1}) = \operatorname{H_{s,2}}(t-t_{0})\operatorname{H_{s,2}}(t_{1} - t)$
-                  turns the vortex on and off with a smoothed heaviside function at times $t_{0}$ and $t_{1}$
+                  turns the vortex on and off with a smoothed Heaviside function at times $t_{0}$ and $t_{1}$
                   respectively.
                   Here, position vector $\vec{r} = \vec{x}-\vec{x_{\text{swirl}}}$, where $\vec{x_{\text{swirl}}}$ is
                   the center of
@@ -621,7 +599,7 @@
                 <p>
                   The relative velocity between the air and each leaf is computed as:
                 </p>
-                $$\vec{v}_{\text{rel}} = \vec{v_{\text{air}}} - \vec{v_{\text{leaf}}}$$
+                $$\vec{v}_{\text{rel}} = \vec{v}_{\text{air}} - \vec{v}_{\text{leaf}}$$
                 <p>
                   By idealizing each leaf as a thin disk, we can compute the aerodynamic forces and moments
                   analytically.
@@ -655,7 +633,7 @@
             The simulation takes place in a finite 3D box of space, but runs in time for as long as the page is open.
           </p>
 
-          <details class="filters mj" id="space-time-mj">
+          <!-- <details class="filters mj" id="space-time-mj">
             <summary class="summary"><span>show the math: the spatiotemporal domain</span></summary>
             <div class="filters-panel">
               <div class="filter-container">
@@ -667,7 +645,7 @@
                 </p>
               </div>
             </div>
-          </details>
+          </details> -->
 
           <!-- ========== SUBSECTION 1: CAMERA WITHIN THE DOMAIN ========== -->
           <h3>How the camera moves</h3>
@@ -720,7 +698,7 @@
                   rate $\lambda_{0}$ based on the current population $N$ and the maximum population $N_{\text{max}}$.
                   If $N \geq N_{\text{max}}$, then $\lambda = 0$ (no new leaves will spawn).
                   If $N = 0$, then $\lambda = \lambda_{0}$ (leaves will spawn at the base spawn rate).
-                  This spawn logic is frame rate independent.
+                  This spawn logic is frame-rate independent.
                 </p>
                 <p>
                   Swirls follow the same spawning logic, but are culled differently from leaves.
@@ -734,13 +712,12 @@
           <h3>Leaf design</h3>
           <p>
             In nature, no two leaves look exactly alike.
-            To reflect this in my sim I layer different types of structured randomness.
-            I designed a handful of different leaf geometries and color pallates.
-            Each color pallate has several colors to choose from, but are designed such that colors from the same
-            pallate look reasonable together.
-            When a leaf is created, it randomly picks a geometry and a color pallate.
-            Then, the leaf uses the color pallate to randomly color each of the regions in the geometry.
-            This gives each leaf a unique, yet coordinated look.
+            To reflect this in my sim, I layer different types of structured randomness.
+            I designed a handful of different leaf geometries and color palettes.
+            Each color palette has several colors to choose from, but are designed such that colors from the same palette look reasonable together.
+            When a leaf is created, it randomly picks a geometry and a color palette.
+            Then, the leaf uses the color palette to randomly color each of the regions in the geometry.
+            This gives each leaf a unique yet coordinated look.
           </p>
           <p>
             Of course, two leaves could randomly end up identical.
@@ -751,35 +728,17 @@
           The scene is lit with a weak ambient light, and a stronger directional light.
           Leaves react to light by the MeshStandardMaterial model from three.js, which is a physically-based rendering
           model.
-          Exponential fog dims distant objects.
+          Exponential fog dims objects based on distance to enhance the depth effect.
 
           <!-- ========== PERFORMANCE NOTES ========== -->
           <h2>Performance</h2>
           <p>
-            The sim runs on fixed physics time-steps at 120 Hz, but allows rendering skips with a frame-time accumulator and
+            The sim runs on fixed physics time-steps at 120 Hz, but allows rendering skips with a frame-time accumulator
+            and
             a cap on substeps.
             That way, even if you open this website on your smart-fridge, you can still enjoy some
             true-to-physics leaves, though possibly at a lower frame rate.
           </p>
-
-          <!-- ========== CREDITS & STACK ========== -->
-          <h2>Credits &amp; stack</h2>
-          <h4>Rendering by three.js</h4>
-          <!-- <h3>Three.js</h3>
-          <p>
-            Three.js is a
-          </p>
-          <p>
-            My initial foray into this leaf simulation used canvas.
-            I hand-rolled parallax depth effects, depth of focus blur, and even emulated leaf rotation by scaling the
-            leaf's mesh along the appropriate axes.
-            While it was super fun to learn about all of this stuff, I was thrilled to discover that Three.js was
-            available for free, and provided all of these functionalities (and more) in much more robust and performant
-            functions.
-          </p>
-          <p>
-            Thank you, Three.js devs!
-          </p> -->
         </div>
       </div>
     </section>
@@ -814,7 +773,7 @@
 
 
   <script type="module">
-    import '/js/leaf_sim/leaf_sim.js';
+    import './js/leaf_sim/leaf_sim.js';
   </script>
 
   <!-- <script type="module">

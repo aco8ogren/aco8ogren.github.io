@@ -3,7 +3,7 @@
  * @Author: alex 
  * @Date: 2025-08-22 15:34:00 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-20 19:37:30
+ * @Last Modified time: 2025-10-18 18:44:04
  */
 /* =========================
    0) THEME VARIABLES
@@ -47,6 +47,8 @@ a:hover,
 a:focus {
     text-decoration: underline;
 }
+
+.comfy-spacing { line-height: 1.8; } 
 
 /* =========================
    2) HORIZONTAL PAGE STRIP
