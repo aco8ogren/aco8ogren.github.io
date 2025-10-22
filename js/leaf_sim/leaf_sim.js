@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-10-18 16:02:40
+ * @Last Modified time: 2025-10-21 21:59:04
  */
 
 import * as THREE from 'three';
@@ -29,9 +29,9 @@ import { initCamYPositionPlot, pushCamYPositionSample, initLeafDensityPlot, upda
 // load assets
 const leafModelBank = new MeshModelBank();
 await leafModelBank.prepareMany([
-    './graphics/leaves/maple_leaf_1.glb',
-    './graphics/leaves/maple_leaf_2.glb',
-    './graphics/leaves/maple_leaf_3.glb',
+    '/graphics/leaves/maple_leaf_1.glb',
+    '/graphics/leaves/maple_leaf_2.glb',
+    '/graphics/leaves/maple_leaf_3.glb',
 ]);
 
 /* -------------------- INPUT -------------------- */

@@ -1,43 +1,12 @@
 [
   {
-    "id": "metamaterials-data-driven-inprep",
-    "title": "Data-Driven Methods for Architected Metamaterials: Data Curation, Property Prediction, and Intelligent Design",
-    "titleShort": "Review: Data-Driven Design of Structured Materials",
-    "authors": [
-      "B. Zheng",
-      "A.C. Ogren*",
-      "R. Wang*",
-      "J. Lee*",
-      "C. Daraio",
-      "K. Liu",
-      "G.X. Gu"
-    ],
-    "journal": "in preparation",
-    "journalShort": "in prep",
-    "year": "",
-    "date": "",
-    "category": "",
-    "defaultOrder": -1,
-    "keywordsVisible": [
-      "structured materials",
-      "machine learning",
-      "surrogate models",
-      "computational material design"
-    ],
-    "keywordsHidden": [],
-    "status": "in preparation",
-    "doi": "",
-    "url": "",
-    "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
-  },
-  {
     "id": "vswe",
-    "title": "Visual Surface Wave Elastography: Estimating Interior Material Properties from Monocular Video",
+    "title": "Visual Surface Wave Elastography: Revealing Subsurface Physical Properties via Visible Surface Waves",
     "titleShort": "Visual Surface Wave Elastography",
     "authors": [
       "A.C. Ogren",
       "B.T. Feng",
+      "J. Ahn",
       "K.L. Bouman",
       "C. Daraio"
     ],
@@ -100,7 +69,7 @@
     "doi": "",
     "url": "",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
+    "thumbnail": "/graphics/hierarchical_hidden_patterns/thumbnail/hierarchical_template.png"
   },
   {
     "id": "gp-dispersion-2024",
@@ -134,7 +103,7 @@
     "doi": "10.2139/ssrn.4546650",
     "url": "https://dx.doi.org/10.2139/ssrn.4546650",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
+    "thumbnail": "/graphics/gpr-dispersion/thumbnail/gpr-dispersion-thumb.png"
   },
   {
     "id": "vvt-cvpr-2022",
@@ -167,7 +136,7 @@
     "doi": "10.48550/arXiv.2104.02735",
     "url": "https://doi.org/10.48550/arXiv.2104.02735",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
+    "thumbnail": "/graphics/vvt/thumbnail/vvt_teaser.png"
   },
   {
     "id": "iml-metamaterials-eml-2022",
@@ -202,7 +171,7 @@
     "doi": "10.48550/arXiv.2111.05949",
     "url": "https://doi.org/10.48550/arXiv.2111.05949",
     "pdf": "",
-    "thumbnail": "graphics/thumbnails/coconut_flask.svg"
+    "thumbnail": "/graphics/hidden_patterns/thumbnail/multiplexer_signal_3.png"
   },
   {
     "id": "collagen-expmech-2019",

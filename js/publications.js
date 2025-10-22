@@ -2,7 +2,7 @@
  * @Author: alex 
  * @Date: 2025-09-19 19:28:04 
  * @Last Modified by: alex
- * @Last Modified time: 2025-09-20 19:41:46
+ * @Last Modified time: 2025-10-21 22:32:47
  */
 (() => {
   const $ = (s) => document.querySelector(s);
@@ -202,8 +202,12 @@
     const imgThumb = linkThumb.querySelector('img');
     const objThumb = linkThumb.querySelector('object');
 
-    const thumb = p.thumbnail || 'graphics/thumbnails/coconut_flask.svg';
+    console.log(p.titleShort)
+    console.log('thumbnail = ' + p.thumbnail)
+    const thumb = p.thumbnail;
     const isSvg = /\.svg(\?.*)?$/i.test(thumb);
+    console.log(thumb + ' is svg? ' + isSvg);
+
 
     // Link + ARIA (unchanged)
     const href = p.pdf || p.url || (p.doi ? `https://doi.org/${p.doi}` : '#');
@@ -226,7 +230,7 @@
       objThumb.hidden = true;
     }
 
-    imgThumb.src = p.thumbnail || 'graphics/thumbnails/coconut_flask.svg';
+    imgThumb.src = p.thumbnail;
     imgThumb.alt = `Thumbnail for ${p.titleShort || p.title || 'publication'}`;
 
     linkFull.href = p.doi ? `https://doi.org/${p.doi}` : (p.url || '#');
