@@ -5,7 +5,7 @@
  * @Author: alex 
  * @Date: 2025-08-18 14:16:14 
  * @Last Modified by: alex
- * @Last Modified time: 2025-10-21 21:59:04
+ * @Last Modified time: 2025-10-22 11:37:53
  */
 
 import * as THREE from 'three';
@@ -172,6 +172,7 @@ let _quiver_frame = 0;            // throttle counter
 /* --------------------------- THREE.JS SCENE SETUP -------------------------- */
 // --- host canvas (DOM) ---
 const view_dom_el = document.createElement('canvas');
+view_dom_el.id = 'leaf-sim-canvas';
 
 // Position it where you want it (fixed card in the viewport)
 view_dom_el.style.position = 'fixed';

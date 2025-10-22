@@ -1,0 +1,153 @@
+/* Page box & margins */
+@page { size: Letter; margin: 0.5in; } /* swap to A4 if needed */
+
+@media print {
+  html, body {
+    height: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Flatten the site layout so pagination works */
+  #page-strip,
+  .page,
+  .page-shell,
+  .page-body,
+  main,
+  .resume,
+  .container,
+  .pub-grid,
+  .grid,
+  .row,
+  .scroller,
+  [data-scroll] {
+    display: block !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Optional: start each top-level page on its own printed page */
+  .page:not(:first-of-type) { break-before: page; }
+
+  /* Kill animations/transforms/overlays that block pagination */
+  *, *::before, *::after { animation: none !important; transition: none !important; transform: none !important; }
+  .sticky, .fixed, nav, .hud, .site-header, .site-footer, .edge-fade-x { position: static !important; display: none !important; }
+
+  /* Hide realtime/interactive bits */
+  canvas, details, #leaf-sim-canvas, #cam-plot, #density-plot, .btn, .filters { display: none !important; }
+
+  /* Make the CV fill width and avoid clipping/splitting */
+  .cv, .resume, main, .page-body { overflow: visible !important; max-width: none !important; }
+
+  .cv-section, .cv-entry, .entry, .card, .grid-row, article, section {
+    break-inside: avoid-page;
+    page-break-inside: avoid; /* legacy */
+  }
+
+  /* Tighter print typography */
+  body { font-size: 10.5pt; line-height: 1.25; }
+  h1, h2, h3 { break-after: avoid; }
+
+  /* Manual page breaks */
+  .print-only-page-break { break-before: page; page-break-before: always; }
+  .print-only-page-break-after { break-after: page; page-break-after: always; }
+
+  /* Optional: show URLs after links */
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-weight: normal; }
+}
+
+@media print {
+  /* 1) Undo the app-shell constraints that block pagination */
+  html, body { height: auto !important; overflow: visible !important; }
+
+  #page-strip {
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    grid-auto-flow: initial !important;
+    grid-auto-columns: auto !important;
+    scroll-snap-type: none !important;
+  }
+
+  .page-shell {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+  }
+
+  .page {
+    position: static !important;
+    height: auto !important;
+    /* optional: put each site “page” on its own printed sheet */
+    /* remove if you want continuous flow */
+    break-before: page;
+  }
+
+  /* 2) Let vertical content paginate & remove the fade masks */
+  .scroller, .page-body {
+    overflow: visible !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+    background: transparent !important;
+  }
+  .edge-fade-x {         /* IMPORTANT: don't hide; just remove the mask */
+    -webkit-mask: none !important;
+    mask: none !important;
+  }
+
+  /* 3) Collapse big viewport spacers that would waste paper */
+  .spacer { height: 0 !important; }
+
+  /* 4) Avoid ugly splits inside items */
+  .resume .entry, .cv-entry, .card, article, section {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  /* 5) Your manual breaks */
+  .print-only-page-break { break-before: page; page-break-before: always; }
+  .print-only-page-break-after { break-after: page; page-break-after: always; }
+}
+
+@media print {
+  /* Keep ONLY the CV page */
+  #page-strip > :not(#page-2) { display: none !important; }
+
+  /* Remove the "CV" header bar */
+  #page-2 .header { display: none !important; }
+
+  /* Flatten the app shell so it paginates */
+  html, body,
+  #page-strip,
+  #page-2,
+  #page-2 .page-shell,
+  #page-2 .page-body {
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  /* Remove edge fade/masks so nothing clips */
+  #page-2 .page-body { -webkit-mask: none !important; mask: none !important; background: transparent !important; }
+
+  /* Optional: make the resume use full printable width */
+  #page-2 .resume { max-width: none !important; }
+
+  /* Optional: collapse big spacer divs */
+  .spacer { height: 0 !important; }
+
+  /* Avoid awkward splits */
+  .resume .entry, .cv-entry, .pub-card, section, article {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  /* Hide realtime/overlays just in case */
+  .hud, #cam-plot, #density-plot, canvas, #leaf-sim-canvas, nav, .filters { display: none !important; }
+}
+
