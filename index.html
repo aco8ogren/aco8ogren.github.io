@@ -3,7 +3,7 @@
 * @Author: alex
 * @Date: 2025-08-22 15:34:48
  * @Last Modified by: alex
- * @Last Modified time: 2025-10-22 14:32:44
+ * @Last Modified time: 2025-10-23 12:31:33
 */
  -->
 <!doctype html>
@@ -77,7 +77,8 @@
             impactful solutions to
             real-world problems.
             My PhD focused on applying computer vision, machine learning, and inference to elastodynamic problems.
-            On this site you will find information about my talents, projects & publications, education, interests, and more.
+            On this site you will find information about my talents, projects & publications, education, interests, and
+            more.
           </p>
           <div class="spacer"></div>
           <h3>
@@ -248,11 +249,17 @@
               </p>
 
               <p class="entry">
-                <span class="organization">Finite element analysis (libraries written by me)</span>
+                <span class="organization">Finite element analysis (my libraries)</span>
                 <span class="position">
-                  <a href="https://github.com/aco8ogren/2D-dispersion">2D-dispersion</a>,
-                  <a href="https://github.com/aco8ogren/3D-dispersion-matlab">3D-dispersion</a>,
-                  <a href="https://github.com/aco8ogren/tissue-dispersion">tissue-dispersion</a>
+                    <a class="nav-link" target="_blank" rel="noopener noreferrer"
+                      href="https://github.com/aco8ogren/2D-dispersion">2D-dispersion</a>,
+                    <a class="nav-link" target="_blank" rel="noopener noreferrer"
+                      href="https://github.com/aco8ogren/3D-dispersion-matlab">3D-dispersion</a>,
+                    <a class="nav-link" target="_blank" rel="noopener noreferrer"
+                      href="https://github.com/aco8ogren/tissue-dispersion">tissue-dispersion</a>
+                    <!-- <a target="_blank" rel="noopener noreferrer" href="https://github.com/aco8ogren/2D-dispersion">2D-dispersion</a>,
+                  <a target="_blank" rel="noopener noreferrer" href="https://github.com/aco8ogren/3D-dispersion-matlab">3D-dispersion</a>,
+                  <a target="_blank" rel="noopener noreferrer" href="https://github.com/aco8ogren/tissue-dispersion">tissue-dispersion</a> -->
                 </span>
               </p>
 
@@ -344,11 +351,11 @@
                     <span class="pub-simple-title"></span>
                   </div>
                   <div class="pub-row-2">
-                    <a class="pub-thumbnail" href="#" aria-label="">
+                    <a class="pub-thumbnail" target="_blank" rel="noopener noreferrer" href="#" aria-label="">
                       <img src="" alt="">
                       <object data="" type="image/svg+xml" hidden></object>
                     </a>
-                    <h5 class="pub-full-title"><a href="#"></a></h5>
+                    <h5 class="pub-full-title"><a target="_blank" rel="noopener noreferrer" href="#"></a></h5>
                     <span class="pub-journal pub-journal-full only-desktop"></span>
                     <span class="pub-journal pub-journal-short only-mobile"></span>
                     <div class="pub-keywords" hidden></div>
@@ -532,7 +539,9 @@
                   \]
                   has the per-step solution
                   \[
-                  q_{n+1}=\underbrace{\exp\!\big(\tfrac12(0,\boldsymbol{\omega}_{n+1})\Delta t\big)}_{\text{unit quaternion with axis }\hat{\boldsymbol{\omega}}_{n+1}\text{, and angle }\|\boldsymbol{\omega}_{n+1}\|\Delta t}\ \otimes\ q_n.
+                  q_{n+1}=\underbrace{\exp\!\big(\tfrac12(0,\boldsymbol{\omega}_{n+1})\Delta t\big)}_{\text{unit
+                  quaternion with axis }\hat{\boldsymbol{\omega}}_{n+1}\text{, and angle
+                  }\|\boldsymbol{\omega}_{n+1}\|\Delta t}\ \otimes\ q_n.
                   \]
                   This update rule can be read more simply as $q\leftarrow dq\otimes q$.
                 </p>
@@ -718,7 +727,8 @@
             In nature, no two leaves look exactly alike.
             To reflect this in my sim, I layer different types of structured randomness.
             I designed a handful of different leaf geometries and color palettes.
-            Each color palette has several colors to choose from, but are designed such that colors from the same palette look reasonable together.
+            Each color palette has several colors to choose from, but are designed such that colors from the same
+            palette look reasonable together.
             When a leaf is created, it randomly picks a geometry and a color palette.
             Then, the leaf uses the color palette to randomly color each of the regions in the geometry.
             This gives each leaf a unique yet coordinated look.

@@ -32,12 +32,12 @@
     "status": "in preparation",
     "doi": "",
     "url": "",
-    "pdf": "",
+    "pdf": "https://arxiv.org/html/2507.09207v1",
     "thumbnail": "/graphics/vswe/thumbnail/teaser.svg"
   },
   {
     "id": "phononics-hierarchical",
-    "title": "Phononic materials with effectively scale-separated hierarchical features using interpretable machine learning",
+    "title": "A multiscale design method using interpretable machine learning for phononic materials with closely interacting scales",
     "titleShort": "Hierarchical material design via interpretable ML",
     "authors": [
       "M.V. Bastawrous",
@@ -68,7 +68,7 @@
     "status": "",
     "doi": "",
     "url": "",
-    "pdf": "",
+    "pdf": "https://arxiv.org/abs/2408.08428",
     "thumbnail": "/graphics/hierarchical_hidden_patterns/thumbnail/hierarchical_template.png"
   },
   {

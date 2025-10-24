@@ -2,7 +2,7 @@
  * @Author: alex 
  * @Date: 2025-09-19 19:28:04 
  * @Last Modified by: alex
- * @Last Modified time: 2025-10-21 22:32:47
+ * @Last Modified time: 2025-10-23 12:19:47
  */
 (() => {
   const $ = (s) => document.querySelector(s);
@@ -211,6 +211,7 @@
 
     // Link + ARIA (unchanged)
     const href = p.pdf || p.url || (p.doi ? `https://doi.org/${p.doi}` : '#');
+    console.log('href = ' + href)
     linkThumb.href = href;
     linkThumb.setAttribute('aria-label', `Open ${p.titleShort || p.title || 'publication'}`);
 
@@ -233,7 +234,7 @@
     imgThumb.src = p.thumbnail;
     imgThumb.alt = `Thumbnail for ${p.titleShort || p.title || 'publication'}`;
 
-    linkFull.href = p.doi ? `https://doi.org/${p.doi}` : (p.url || '#');
+    linkFull.href = href;
     linkFull.textContent = p.title || '';
 
     elAuthors.textContent = (p.authors || []).join(', ');
